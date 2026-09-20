@@ -151,17 +151,6 @@ class TestCliEndToEnd(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("unknown provider", result.stderr)
 
-    def test_init_help_exits_zero(self):
-        result = run_cli("init", "--help")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("Run interactive terminal wizard", result.stdout)
-
-    def test_ui_help_exits_zero(self):
-        result = run_cli("ui", "--help")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("Launch local configuration studio WebUI", result.stdout)
-        self.assertIn("--workspace", result.stdout)
-
     def test_generate_multi_input_with_set_overrides(self):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory) / "base.yaml"

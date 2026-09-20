@@ -6,6 +6,7 @@ from typing import Dict, Iterable
 
 from .models import ConfigProvider
 from .providers import CustomProvider, EnvProvider, JsonProvider
+from .providers.singbox import SingBoxProvider
 
 
 class ProviderRegistry:
@@ -34,5 +35,5 @@ class ProviderRegistry:
 
 
 default_registry = ProviderRegistry(
-    (CustomProvider(), JsonProvider(), EnvProvider())
+    (CustomProvider(), JsonProvider(), EnvProvider(), SingBoxProvider())
 )

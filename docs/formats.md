@@ -1,8 +1,7 @@
 # 格式支持与产物
 
 DevConfig-Gen 的输入格式是 JSON 和 YAML；产物格式是 JSON、YAML 或纯文本
-（内置 `env` Provider 输出 `.env`）。核心引擎不定义其他格式，Web 工作台中的
-XML 按钮只是预留入口，点击会提示“即将支持”，不会产生 XML 输出。
+（内置 `env` Provider 输出 `.env`）。核心引擎不定义其他格式。
 
 ## 格式标识与别名
 
@@ -42,7 +41,7 @@ CLI 中：
 
 YAML 由两层实现支撑：
 
-1. 安装了 PyYAML（`pip install "devconfig-gen[yaml]"`）时：
+1. 安装了 PyYAML（`pip install "devconfig_gen_singbox[yaml]"`）时：
    - 解析使用 `yaml.safe_load`；
    - 序列化使用 `yaml.safe_dump(default_flow_style=False, sort_keys=False, allow_unicode=True)`；
    - 获得完整 YAML 语义。

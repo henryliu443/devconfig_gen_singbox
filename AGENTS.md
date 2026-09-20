@@ -6,21 +6,23 @@ side effects.
 
 ## Repo relationship (父/子)
 
-- **This repo is the PARENT (父仓库 / upstream).**
-- **Child (子仓库 / fork):** `DevConfig-Gen_SingBox` — a private integration
-  fork derived from this repo.
+- **This repo is the CHILD (子仓库 / fork):** `DevConfig-Gen_SingBox` — a private
+  integration fork.
+- **Parent (父仓库 / upstream):** `DevConfig-Gen`
+  (https://github.com/henryliu443/DevConfig-Gen) — owns the neutral core and the
+  provider standard (`PROVIDER_STANDARD.md`).
 - **Downstream legacy source (not a fork):** `Automated-sing-box-json-generator`
   — scheduled to be **merged/decoupled and retired**. It is **reference only**;
   never a development target. Do not develop there.
 
 Authority flows **parent → child → downstream**:
 
-- The parent owns the neutral core and the provider standard
-  (`PROVIDER_STANDARD.md`).
-- Domain-specific providers (e.g. `providers/singbox/`) live in the **child**,
-  never here.
-- The child must not fork or diverge the neutral core; core changes are made
-  here first and flow down.
+- The parent owns the neutral core and the provider standard.
+- Domain-specific providers (e.g. `providers/singbox/`) live **here**, never in
+  the parent.
+- Do **not** fork or diverge the neutral core. Core changes are made in the
+  parent first and flow down; pull them via the `upstream` remote (see the
+  handoff). Never re-implement engine/format/validation logic here.
 
 ## Ground rules
 

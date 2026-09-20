@@ -8,7 +8,7 @@ from devconfig_gen import (
     describe_provider,
     diagnose_request,
 )
-from devconfig_gen.providers import CustomProvider, EnvProvider, JsonProvider
+from devconfig_gen.providers import CustomProvider, EnvProvider, JsonProvider, SingBoxProvider
 
 
 class TestProviderMetadata(unittest.TestCase):
@@ -110,10 +110,11 @@ class TestProviderMetadata(unittest.TestCase):
     def test_builtin_providers_registered(self):
         from devconfig_gen.registry import default_registry
 
-        self.assertEqual(default_registry.names(), ("custom", "env", "json"))
+        self.assertEqual(default_registry.names(), ("custom", "env", "json", "singbox"))
         self.assertIsInstance(default_registry.get("custom"), CustomProvider)
         self.assertIsInstance(default_registry.get("json"), JsonProvider)
         self.assertIsInstance(default_registry.get("env"), EnvProvider)
+        self.assertIsInstance(default_registry.get("singbox"), SingBoxProvider)
 
 
 if __name__ == "__main__":

@@ -13,15 +13,14 @@ normalization, and validation.
 ## Layers
 
 ```text
-CLI (`generate`/`validate`)   `init` wizard   `ui` studio
-        |                          |               |
-        +--------------------------+---------------+
-                                   v
+CLI (`providers`/`schema`/`generate`/`validate`)
+        |
+        v
 engine.py  ---- build_request / generate_pipeline / generate_from_file
   |            diagnose_request / describe_provider
   |            (the single shared pipeline, with multi-source deep_merge)
   v
-ProviderRegistry -> ConfigProvider (`custom`, `json`, `env`)
+ProviderRegistry -> ConfigProvider (`custom`, `json`, `env`, `singbox`)
   |
   v
 formats.py  (JSON/YAML load, dump, detection, media types, deep_merge, coerce_scalar)
@@ -38,14 +37,10 @@ validation.py (path-aware Diagnostic helpers)
   a pre-rendered string), and `media_type`.
 - `GenerationResult` — the provider name plus the artifacts it produced.
 - `ProviderField` / `ProviderStep` — declarative field metadata for
-  documentation and the interactive clients. Both accept an optional `i18n`
+  documentation and the `schema` command. Both accept an optional `i18n`
   mapping (`{"zh": {"title": ..., "description": ...}}`) so clients can render
   localized labels while the canonical English strings stay the default.
 - `ConfigProvider` — the protocol providers implement.
-- `WebUIWidgets` — an optional, documentation-only protocol for providers that
-  declare custom WebUI widgets via `web_ui_widgets()` (a mapping of
-  `field_type` to a JavaScript factory source string). It is never required;
-  providers without it render exactly as before.
 
 ### Engine (`engine.py`)
 
@@ -109,40 +104,28 @@ while `Diagnostic.field` keeps the full dotted path for tooling.
   document. It proves the pipeline without imposing a schema.
 - `env` — flattens a nested mapping into `UPPER_SNAKE_CASE` `.env` text,
   demonstrating a non-JSON output format and a provider-driven schema step.
+- `singbox` — a rich-domain provider (child fork only) that turns a structured
+  context into sing-box `server` / `client` configs plus a share-link list. It
+  follows `PROVIDER_STANDARD.md`: variant detail lives in
+  `providers/singbox/plugins/<variant>.py` (one module per protocol), the
+  neutral layers (`provider.py` / `schema.py` / `route.py`) never mention a
+  protocol field name, and credentials/subdomain prefixes are explicit inputs
+  (no environment reads, no subprocesses, no state).
 
-### Interactive clients (`interactive.py`, `web_ui.py`)
+  `providers/singbox/data/rules.json` is the first provider data file. It is
+  loaded with `Path(__file__).parent / "data" / "rules.json"` so the provider
+  works from an installed package with no external files; `network.routing`
+  selects `embedded` or `custom` rules and may extend the embedded buckets via
+  `custom_rules`.
 
-Two thin clients consume the same declarative metadata and pipeline; neither
-contains generation, validation, or serialization logic of its own:
+### Clients
 
-- `interactive.py` — the `devconfig-gen init` terminal wizard. It walks the
-  provider's `steps`, prompts by `ProviderField.type`, validates through
-  `diagnose_request`, and writes through `generate`. On validation failure it
-  re-runs with the previous answers pre-filled instead of restarting.
-- `web_ui.py` — the `devconfig-gen ui` single-page studio, served by the
-  standard-library `ThreadingHTTPServer`. The HTML/CSS/JS is embedded (no build
-  step) and it calls the engine through a small JSON API. It renders each
-  `ProviderField` through a table-driven widget registry: `string` / `integer` /
-  `boolean` / `mapping` / `document` / `tree` each map to a built-in widget, so
-  `tree` fields get a recursive editor (add/remove/retype/clear at any depth)
-  and `document` fields get a drop-zone plus inline editor. A provider may
-  register additional widgets for its own field types through the optional
-  `web_ui_widgets()` method, served by `/api/widgets` and registered into the
-  same table by the client (unknown types fall back to `string`). The header
-  offers a "Clear All" reset and a quick-links sidebar.
-
-The web server is local-only by design:
-
-- it rejects requests whose `Host` header is not loopback (DNS-rebinding
-  defense);
-- `/api/export` is sandboxed to a `workspace_root` (the current directory by
-  default), so a page cannot write outside the workspace;
-- `/api/schema`, `/api/validate`, `/api/generate`, and `/api/export` return
-  structured JSON errors with 4xx status codes for bad input or unknown
-  providers.
-
-These modules are imported lazily from `devconfig_gen.__init__` (PEP 562), so
-`import devconfig_gen` never imports `http.server` or `webbrowser`.
+This repository ships only two clients, both thin: the **CLI** (`cli.py`, argument
+parsing plus calls into `engine`) and the **Python API** (`engine` helpers). Both
+consume the same declarative metadata and the same pipeline; neither contains
+generation, validation, or serialization logic of its own. The terminal wizard
+and the local Web studio that exist in the parent repository are intentionally
+not part of this child fork.
 
 ## Design decisions
 
@@ -152,7 +135,7 @@ These modules are imported lazily from `devconfig_gen.__init__` (PEP 562), so
 3. The engine never imports a specific provider directly; it works through the
    registry.
 4. The CLI and the Python API share one code path, so their output is
-   byte-for-byte identical. The WebUI adds a third client over the same path.
+   byte-for-byte identical.
 5. Importing the package has no side effects. File output only happens when an
    explicit `output_dir` is supplied.
 6. Provider metadata (`diagnose`, `steps`, `describe_schema`) is optional;
@@ -161,10 +144,10 @@ These modules are imported lazily from `devconfig_gen.__init__` (PEP 562), so
    so output is byte-for-byte stable across runs and formats.
 8. No remote operation, system mutation, credential handling, or deployment is
    part of the core engine. The only filesystem writes are explicit
-   `output_dir` writes, bounded by the WebUI workspace sandbox.
+   `output_dir` writes.
 
 ## Out of scope
 
 DevConfig-Gen does not perform deployment, remote repository operations,
 service management, credential storage, or automatic migration of machine
-state.
+state. This child fork does not ship an interactive wizard or a Web UI.

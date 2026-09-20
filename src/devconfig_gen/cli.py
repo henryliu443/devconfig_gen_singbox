@@ -74,32 +74,6 @@ def build_parser() -> argparse.ArgumentParser:
     schema_cmd.add_argument("--provider", default="json", help="Provider name (default: json)")
     schema_cmd.set_defaults(handler=_schema)
 
-    init_cmd = sub.add_parser(
-        "init",
-        help="Run interactive terminal wizard to create configuration",
-        description="Run interactive terminal wizard to create configuration.",
-    )
-    init_cmd.add_argument("--provider", default="custom", help="Provider name (default: custom)")
-    init_cmd.add_argument("--input", type=Path, help="Optional existing config file to pre-fill wizard")
-    init_cmd.add_argument("--output-dir", default=".", type=Path, help="Directory for generated artifact")
-    init_cmd.add_argument("--format", choices=("json", "yaml"), help="Output format override")
-    init_cmd.set_defaults(handler=_init)
-
-    ui_cmd = sub.add_parser(
-        "ui",
-        help="Launch local configuration studio WebUI",
-        description="Launch local configuration studio WebUI.",
-    )
-    ui_cmd.add_argument("--host", default="127.0.0.1", help="Host address (default: 127.0.0.1)")
-    ui_cmd.add_argument("--port", default=8848, type=int, help="Port to bind (default: 8848)")
-    ui_cmd.add_argument("--no-browser", action="store_true", help="Do not automatically open browser")
-    ui_cmd.add_argument(
-        "--workspace",
-        default=None,
-        help="Directory the studio may export into (default: current directory)",
-    )
-    ui_cmd.set_defaults(handler=_ui)
-
     return parser
 
 
@@ -177,30 +151,6 @@ def _schema(args) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(json.dumps([step.as_dict() for step in steps], indent=2))
-    return 0
-
-
-def _init(args) -> int:
-    from .interactive import run_interactive_wizard
-
-    input_path = str(args.input) if args.input else None
-    return run_interactive_wizard(
-        args.provider,
-        input_path=input_path,
-        output_dir=str(args.output_dir),
-        output_format=args.format,
-    )
-
-
-def _ui(args) -> int:
-    from .web_ui import run_web_ui
-
-    run_web_ui(
-        host=args.host,
-        port=args.port,
-        open_browser=not args.no_browser,
-        workspace_root=args.workspace,
-    )
     return 0
 
 

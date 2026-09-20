@@ -1,0 +1,55 @@
+network:
+  domain_root: example.com
+  subdomain_prefixes:
+    reality: a1b2c3d4
+    tuic: e5f6a7b8
+    hy2: c9d0e1f2
+  tunnel_mode: proxy
+  protocols:
+    - type: anytls
+      enabled: true
+      port: 23244
+      auth:
+        password: replace-with-anytls-password
+      reality:
+        decoy_server: www.cloudflare.com
+        decoy_port: 443
+        private_key: replace-with-reality-private-key
+        public_key: replace-with-reality-public-key
+        short_id: replace-with-short-id
+    - type: tuic
+      enabled: true
+      port: 9443
+      auth:
+        uuid: 00000000-0000-0000-0000-000000000000
+        password: replace-with-tuic-password
+      tls:
+        cert_path: /etc/sing-box-tuic/certs/tuic.crt
+        key_path: /etc/sing-box-tuic/certs/tuic.key
+    - type: hysteria2
+      enabled: true
+      port: 7443
+      auth:
+        password: replace-with-hysteria2-password
+        obfs_password: replace-with-obfs-password
+      bandwidth:
+        up_mbps: 500
+        down_mbps: 500
+      tls:
+        cert_path: /etc/hysteria/server.crt
+        key_path: /etc/hysteria/server.key
+      masquerade: https://www.cloudflare.com
+  routing:
+    rules_source: embedded
+    geoip_cn: true
+  dns:
+    direct_servers:
+      - 223.5.5.5
+      - 119.29.29.29
+    remote_server: 1.1.1.1
+client:
+  server_ip: 203.0.113.10
+  fingerprint: chrome
+options:
+  target: both
+  format: json

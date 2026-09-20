@@ -54,9 +54,6 @@ nav:
   - 扩展:
       - Provider 参考与开发: providers.md
       - Python API: python-api.md
-  - 客户端:
-      - 交互式向导: wizard.md
-      - Web 工作台与 HTTP API: web-ui.md
   - 项目:
       - 开发与测试: development.md
       - 架构总览: architecture.md

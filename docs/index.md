@@ -1,34 +1,34 @@
-# DevConfig-Gen 文档
+# DevConfig-Gen_SingBox 文档
 
-DevConfig-Gen 是一个本地、Provider 驱动的结构化配置生成与校验工具。它把
-JSON/YAML 输入文档合并、覆盖、校验后，通过 Provider 生成结构化配置产物
-（JSON、YAML 或 `.env` 文本）。核心引擎不包含任何网络、部署、服务管理、
-凭据处理或系统修改行为。
+本仓库是父仓库 `DevConfig-Gen` 的**子仓库（child / fork）**：父仓库拥有中立的执行
+引擎与稳定的 Provider 契约，本仓库只在其之上承载 **sing-box 领域 Provider**
+（`providers/singbox/`）。权威方向为 **parent → child → downstream**。
 
-本页是文档总入口和能力清单。安装与第一个产物请从
-[安装与快速开始](getting-started.md) 开始。
+本仓库只保留稳定的 **CLI** 与 **Python API** 两个使用面（不再提供终端向导与
+Web 工作台）。安装与第一个产物请从 [安装与快速开始](getting-started.md) 开始。
 
-## 可插拔扩展：Provider 是唯一扩展点
+## 领域 Scope：sing-box
 
-DevConfig-Gen 的核心是「provider 中立的引擎 + 可插拔的 Provider」。全链路**只有一个扩展点**：
+本仓库实现 `singbox` 领域 scope：把结构化 context 转换为 sing-box 的
+server / client 配置与分享链接。领域细节（协议字段名、结构）隔离在
+`providers/singbox/plugins/<variant>.py`，上游 sing-box 变化只改一个 plugin 文件。
 
-- **领域转换**：注册一个实现 `ConfigProvider` 的对象（`name` / `validate` / `generate`）即可接入新领域；CLI、`schema`、终端向导、Web 工作台都通过注册表发现它，**无需改动任何客户端代码**。
-- **WebUI 字段渲染**：字段渲染是查表驱动的（`WidgetRegistry`，内置 `string`/`integer`/`boolean`/`mapping`/`document`/`tree` 六种默认 Widget）。Provider 可用可选方法 `web_ui_widgets()` 声明 `{field_type: js_factory_source}`，经 `GET /api/widgets?provider=<name>` 下发并注册进同一张 Widget 表；未知类型回退 `string`，未实现者行为完全不变。
-
-两条硬性边界：**领域实现只存在于下游 fork，绝不回填核心**；**Provider 契约保持稳定，不追逐上游版本**。详见 [Provider 参考与开发](providers.md)、[架构总览](architecture.md) 与仓库根目录 [PROVIDER_STANDARD.md](https://github.com/henryliu443/DevConfig-Gen/blob/main/PROVIDER_STANDARD.md)。
+```bash
+devconfig-gen generate --provider singbox --input examples/singbox.yaml --output-dir dist
+devconfig-gen validate --provider singbox --input examples/singbox.yaml
+devconfig-gen schema   --provider singbox
+```
 
 ## 推荐阅读顺序（CLI 优先）
 
-CLI 是主要使用面，建议按下面的顺序阅读：
-
-1. [安装与快速开始](getting-started.md) — 安装、第一个产物、退出码；
-2. [CLI 命令参考](cli.md) — 每个命令、参数、`--input`/`--set`/格式与产物规则；
-3. [CLI 配方](cli-cookbook.md) — 分层配置、管道输入、批量生成、CI 门禁等可复制命令；
-4. [输入合并与覆盖](input-and-merge.md) — 多源合并与覆盖的完整语义；
+1. [安装与快速开始](getting-started.md) — 环境要求、第一个产物、退出码；
+2. [CLI 命令参考](cli.md) — `providers` / `schema` / `generate` / `validate`；
+3. [CLI 配方](cli-cookbook.md) — 分层配置、管道输入、批量生成等可复制命令；
+4. [输入合并与覆盖](input-and-merge.md) — 多源合并与覆盖语义；
 5. [格式支持与产物](formats.md) — JSON/YAML 边界、序列化、产物命名与持久化；
 6. [校验与诊断](validation.md) — `Diagnostic` 与退出码的编程约定。
 
-需要编程集成时再看 [Python API](python-api.md)；需要扩展时看
+需要编程集成时看 [Python API](python-api.md)；需要扩展时看
 [Provider 参考与开发](providers.md)。
 
 ## 文档导航
@@ -36,134 +36,71 @@ CLI 是主要使用面，建议按下面的顺序阅读：
 | 文档 | 内容 |
 | --- | --- |
 | [安装与快速开始](getting-started.md) | 环境要求、安装方式、最小可运行示例 |
-| [CLI 命令参考](cli.md) | `providers` / `schema` / `generate` / `validate` / `init` / `ui` 全部参数、行为与示例 |
+| [CLI 命令参考](cli.md) | `providers` / `schema` / `generate` / `validate` 全部参数、行为与示例 |
 | [CLI 配方](cli-cookbook.md) | 面向脚本的常用命令组合与注意事项 |
 | [输入合并与覆盖](input-and-merge.md) | 多输入文件、`deep_merge` 规则、`--set` 覆盖与类型推断 |
 | [格式支持与产物](formats.md) | JSON/YAML 支持边界、格式检测、序列化、产物命名与持久化 |
 | [校验与诊断](validation.md) | `Diagnostic`、`diagnose`/`validate` 的区别、校验辅助函数 |
-| [Provider 参考与开发](providers.md) | 三个内置 Provider 的准确行为、元数据模型、自定义 Provider 指南 |
+| [Provider 参考与开发](providers.md) | 内置 Provider 的准确行为、元数据模型、自定义 Provider 指南 |
 | [Python API](python-api.md) | 包级导出、engine、formats、registry、models、validation |
-| [交互式向导](wizard.md) | `devconfig-gen init` 的提示类型、默认值、重试与输出选择 |
-| [Web 工作台与 HTTP API](web-ui.md) | `devconfig-gen ui` 的功能、HTTP 接口、Widget 扩展、安全边界 |
-| [开发与测试](development.md) | 项目结构、测试、CI、打包、文档维护 |
-| [架构总览](architecture.md) | 分层、数据流、扩展点；完整设计决策见仓库根目录 [ARCHITECTURE.md](https://github.com/henryliu443/DevConfig-Gen/blob/main/ARCHITECTURE.md) |
+| [开发与测试](development.md) | 项目结构、测试、CI、文档维护 |
+| [架构总览](architecture.md) | 分层、数据流、扩展点；完整设计决策见仓库根目录 [ARCHITECTURE.md](https://github.com/henryliu443/devconfig_gen_singbox/blob/main/ARCHITECTURE.md) |
 
 ## 能力清单
-
-以下能力均可在当前实现中验证（括号内为对应实现文件）。
 
 ### 核心引擎与契约
 
 - Provider 协议：`name`、`validate`、`generate` 为必需，`diagnose`、
-  `describe_schema`/`steps`、`web_ui_widgets` 可选（`models.py`、`engine.py`）。
-- 单入口流水线：CLI、Python API、向导、Web 工作台都调用
-  `devconfig_gen.engine.generate`（`engine.py`）。
+  `describe_schema`/`steps` 可选（`models.py`、`engine.py`）。
+- 单入口流水线：CLI 与 Python API 都调用 `devconfig_gen.engine.generate`
+  （`engine.py`）。
 - 数据契约：`GenerationRequest`、`GenerationResult`、`GeneratedArtifact`、
-  `Diagnostic`、`ProviderField`、`ProviderStep`、`WebUIWidgets`（`models.py`）。
+  `Diagnostic`、`ProviderField`、`ProviderStep`（`models.py`）。
 - Provider 注册表：名称必须为非空小写字符串，重复注册或未知名称抛出
   `ValueError`（`registry.py`）。
 
-### 命令行（重点）
+### 命令行
 
-- 六个子命令：`providers`（发现）、`schema`（元数据）、`generate`（生成）、
-  `validate`（校验）、`init`（终端向导）、`ui`（Web 工作台）（`cli.py`）。
+- 四个子命令：`providers`（发现）、`schema`（元数据）、`generate`（生成）、
+  `validate`（校验）（`cli.py`）。
 - 脚本友好的稳定契约：退出码 `0`/`1`/`2`；`validate --json` 输出诊断数组；
   `schema` 输出步骤数组；产物确定性可 diff。
 - 多输入 `--input`（可重复、从左到右深度合并）与点路径 `--set` 覆盖，
   值按 JSON 字面量推断类型（`cli.py`、`engine.build_request`）。
 - 输出格式解析：`--format` → `--name` 后缀 → Provider 默认；产物名支持子目录，
   拒绝绝对路径与 `..`。
-- 详细参考见 [CLI 命令参考](cli.md)，配方见 [CLI 配方](cli-cookbook.md)。
-
-### 输入
-
-- JSON 与 YAML 文件加载，按扩展名或内容自动检测格式（`formats.py`）。
-- 多个输入文件按从左到右深度合并；映射递归合并，标量/列表整体替换；
-  不修改输入对象（`formats.deep_merge`、`engine.build_request`）。
-- 点路径覆盖（`--set app.port=9090`），值按 JSON 字面量推断类型
-  （`engine._set_nested`、`formats.coerce_scalar`）。
-
-### 校验与诊断
-
-- `Diagnostic(field, message, severity)`：字段为点路径，severity 为
-  `error` 或 `warning`（`models.py`）。
-- 校验辅助函数：`expect_mapping`、`expect_string`、`expect_integer`、
-  `expect_enum`、`expect_string_mapping`，一次收集全部问题
-  （`validation.py`）。
-- `validate` 返回渲染后的消息字符串；`diagnose` 返回结构化 `Diagnostic`；
-  未实现 `diagnose` 的 Provider 由引擎自动降级包装（`engine.diagnose_request`）。
 
 ### 内置 Provider
 
-- `custom`：无 schema，接受任意 JSON/YAML 结构（映射、序列或标量根），
-  原样输出；`tree` 类型字段驱动 Web 工作台的递归编辑器。
-- `json`：透传/重新序列化；要求根为映射；产物默认名为
-  `config.json` / `config.yaml`。
-- `env`：把嵌套映射扁平化为 `UPPER_SNAKE_CASE` 变量，输出 `.env` 纯文本
-  （`media_type: text/plain`）。
+- `custom`：无 schema，接受任意 JSON/YAML 结构（映射、序列或标量根），原样输出。
+- `json`：透传/重新序列化；产物默认名为 `config.json` / `config.yaml`。
+- `env`：把嵌套映射扁平化为 `UPPER_SNAKE_CASE` 变量，输出 `.env` 纯文本。
+- `singbox`：本仓库的领域 Provider，生成 server / client 配置与分享链接。
 
-### 其他客户端
+### Python API
 
-- Python API：`generate`、`generate_pipeline`、`generate_from_file`、
-  `validate_request`、`diagnose_request`、`describe_provider`、
-  `build_request`（`engine.py`）。
-- 终端向导 `init`：按 `ProviderField.type` 提示，支持默认值、选项、上下界、
-  从文件加载文档、校验失败后保留答案重试（`interactive.py`）。
-- Web 工作台 `ui`：标准库 `ThreadingHTTPServer` 提供的单页应用 + JSON API；
-  中英双语、实时预览、草稿保存、磁盘导出沙箱、仅回环访问；左上角 `☰`
-  侧边栏直达仓库、文档站点、问题反馈与邮箱；空上下文检测确保陈旧草稿不会
-  遮挡 Provider 的初始数据（`web_ui.py`）。
-- 字段渲染查表驱动：`WidgetRegistry` 为六种内置字段类型（`string`、`integer`、
-  `boolean`、`mapping`、`document`、`tree`）各注册一个默认 Widget，取代旧的
-  `if`/`else` 分支链（`web_ui.py`）。
-- Provider 可选 Widget：Provider 可实现 `web_ui_widgets()` 返回
-  `{field_type: js_factory_source}`，后端经 `GET /api/widgets?provider=<name>`
-  下发，前端把工厂函数注册进同一张 Widget 表；未知字段类型回退到 `string`，
-  未实现该方法的 Provider 行为完全不变（`models.py`、`web_ui.py`）。
-- `custom` 树编辑器的批量添加从每个容器内的内联行移到根工具栏开关，降低
-  各层级界面的拥挤程度（`web_ui.py`）。
-
-### 产物与输出
-
-- 产物 `GeneratedArtifact(name, content, media_type)`；`content` 为字符串时
-  原样写入，否则按媒体类型序列化（`engine._persist`、`engine._serialize_artifact`）。
-- 默认名：`custom.json`/`custom.yaml`、`config.json`/`config.yaml`、`.env`；
-  `--name` 可覆盖，格式按 `--format` → 文件名后缀 → 默认 JSON 的顺序解析。
-- 产物名不允许绝对路径或 `..`，拒绝逃逸输出目录；子目录会自动创建。
-- JSON 使用标准库 `json`（2 空格缩进、保留插入顺序、保留非 ASCII、末尾换行）；
-  YAML 优先使用 PyYAML，未安装时使用内置子集解析器/序列化器。
-
-### 工程化
-
-- 测试套件 143 个用例，覆盖格式、校验、Provider、合并、CLI/API 等价性、
-  向导、Web UI 与 Widget 注册表（`tests/`）。
-- GitHub Actions CI：Linux/macOS × Python 3.8–3.14（`.github/workflows/ci.yml`）。
-- 发布工作流：推送 `v*` 标签构建 sdist/wheel 并发布到 PyPI
-  （`.github/workflows/release.yml`）。
-- 文档站点：`docs/` 经 MkDocs + Material 从 `docs` 分支发布到
-  <https://henryliu443.github.io/DevConfig-Gen/>（`mkdocs.yml`、
-  `.github/workflows/docs.yml`）。
+- `generate`、`generate_pipeline`、`generate_from_file`、`validate_request`、
+  `diagnose_request`、`describe_provider`、`build_request`（`engine.py`）。
 
 ## 模块地图
 
 ```text
 src/devconfig_gen/
-├── __init__.py       包导出与惰性 UI 入口（PEP 562）
-├── models.py         稳定数据契约：请求/结果/产物/诊断/字段/步骤/协议（含 WebUIWidgets）
+├── __init__.py       包导出（仅 CLI / Python API 面）
+├── models.py         稳定数据契约：请求/结果/产物/诊断/字段/步骤
 ├── engine.py         唯一执行流水线：构建请求、校验、生成、持久化
 ├── formats.py        JSON/YAML 加载与序列化、格式检测、深度合并、类型推断
 ├── validation.py     路径感知的校验辅助函数与 ValidationError
 ├── registry.py       ProviderRegistry 与内置 Provider 注册
 ├── cli.py            命令行入口（仅参数解析与调用 engine）
-├── interactive.py    `init` 终端向导（惰性导入）
-├── web_ui.py         `ui` 本地工作台、HTTP API 与查表式 Widget 渲染（惰性导入）
 └── providers/
-    ├── custom.py     custom Provider
-    ├── json_provider.py  json Provider
-    └── env_provider.py   env Provider
+    ├── custom.py          custom Provider
+    ├── json_provider.py   json Provider
+    ├── env_provider.py    env Provider
+    └── singbox/           sing-box 领域 Provider（本仓库新增）
 ```
 
 ## 版本
 
-当前版本 `1.1.0`（`pyproject.toml`、`devconfig_gen.__version__` 与
+当前版本 `2.0.0`（`pyproject.toml`、`devconfig_gen.__version__` 与
 `devconfig-gen --version` 保持一致）。

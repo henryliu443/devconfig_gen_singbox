@@ -6,6 +6,51 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- PyPI distribution name is now `devconfig_gen_singbox`. The child fork
+  previously reused the parent's `devconfig-gen` name, which collided with the
+  parent's trusted publisher and made OIDC publishing fail. The import package
+  (`devconfig_gen`) and the `devconfig-gen` console script are unchanged.
+
+## [2.0.0]
+
+### Added
+
+- **`singbox` provider** (child-fork domain provider): generates
+  `sing-box.server.{json,yaml}`, `sing-box.client.{json,yaml}`, and
+  `sing-box-links.txt` from a structured context. Variant detail for `anytls`,
+  `tuic`, and `hysteria2` is isolated in `providers/singbox/plugins/` behind a
+  plugin contract; the neutral layers (`provider.py` / `schema.py` /
+  `route.py`) never mention a protocol field name. Credentials and subdomain
+  prefixes are explicit inputs (zero side effects, no environment reads, no
+  subprocesses). Routing rules load from the embedded
+  `providers/singbox/data/rules.json`, selectable/extendable through
+  `network.routing`.
+- `examples/singbox.yaml` sample input.
+
+### Removed
+
+- The interactive terminal wizard (`interactive.py`, `devconfig-gen init`) and
+  the local Web studio (`web_ui.py`, `devconfig-gen ui`) are removed from this
+  child fork, along with their tests and docs. The supported surface is now the
+  stable **CLI** (`providers` / `schema` / `generate` / `validate`) and the
+  **Python API** only. The `WebUIWidgets` protocol and the `web_ui_widgets()`
+  hook are gone with them.
+- `docs/wizard.md` and `docs/web-ui.md`, and their navigation/references.
+- The static HTML landing page (`landing/index.html`) and its docs-workflow
+  publishing step; the repository now contains no HTML.
+
+### Changed
+
+- The README is repositioned around **bounded domain scopes**: it leads with the
+  `DevConfig-Gen_SingBox` child identity and the `singbox` domain (domain model,
+  validation, transformations, variants, share links), and demotes the inherited
+  engine capabilities to an "Inherited DevConfig-Gen Engine" section. The parent
+  owns the neutral engine and provider contract; the child owns the domain.
+- `default_registry` now registers `singbox` alongside `custom`, `json`, and
+  `env`; `devconfig-gen providers` lists four providers.
+
 ## [1.1.0]
 
 ### Added

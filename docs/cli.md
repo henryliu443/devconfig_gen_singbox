@@ -3,12 +3,12 @@
 CLI 是 DevConfig-Gen 的主要使用面。所有命令都是无状态、脚本友好的：输入由
 参数和文件决定，产物写到显式目录，结果通过退出码和可选的 JSON 输出表达。
 
-当前版本为 **1.1.0**；`devconfig-gen --version` 会打印包内
+当前版本为 **2.0.0**；`devconfig-gen --version` 会打印包内
 `devconfig_gen.__version__`，例如：
 
 ```text
 $ devconfig-gen --version
-devconfig-gen 1.1.0
+devconfig-gen 2.0.0
 ```
 
 两种调用方式等价：
@@ -28,15 +28,13 @@ PYTHONPATH=src python3 -m devconfig_gen.cli <command> [options]   # 源码运行
 | 2 | [`schema`](#schema) | 查看 Provider 需要哪些字段（机器可读） |
 | 3 | [`generate`](#generate) | 生成配置产物（主命令） |
 | 4 | [`validate`](#validate) | 只校验输入，不写文件 |
-| 5 | [`init`](#init) | 交互式终端向导 |
-| 6 | [`ui`](#ui) | 本地 Web 工作台 |
 
 全局选项：
 
 | 选项 | 说明 |
 | --- | --- |
 | `-h, --help` | 查看帮助；也可用于子命令（`devconfig-gen generate --help`） |
-| `--version` | 打印 `devconfig-gen <version>`（读取包内 `__version__`，当前为 `1.1.0`） |
+| `--version` | 打印 `devconfig-gen <version>`（读取包内 `__version__`，当前为 `2.0.0`） |
 
 子命令是必填项：不带命令直接运行会由 argparse 报错并返回退出码 `2`。
 
@@ -47,7 +45,7 @@ PYTHONPATH=src python3 -m devconfig_gen.cli <command> [options]   # 源码运行
 | 退出码 | 含义 |
 | --- | --- |
 | `0` | 成功 |
-| `1` | `validate` 发现 `error` 级诊断；`init` 被取消、输入提前结束或生成失败 |
+| `1` | `validate` 发现 `error` 级诊断 |
 | `2` | 用法/输入错误：缺少子命令、未知 Provider、文件不存在或不可读、解析失败、`--set` 语法错误、产物名越界；`generate` 的校验失败也归入此码 |
 
 脚本里可以直接用退出码做门禁：
@@ -64,7 +62,7 @@ fi
 **stderr**，例如：
 
 ```text
-error: unknown provider 'missing'; available: custom, env, json
+error: unknown provider 'missing'; available: custom, env, json, singbox
 error: cannot read .: [Errno 21] Is a directory: '.'
 error: --set expects KEY=VALUE, got 'bad'
 error: artifact name escapes output directory: '../escape.json'
@@ -86,6 +84,7 @@ $ devconfig-gen providers
 custom
 env
 json
+singbox
 ```
 
 该命令没有其他参数，正常结束时返回退出码 `0`。
@@ -225,6 +224,7 @@ CLI 解析 `--set` 时。
 | `custom` | `custom.json` / `custom.yaml` | `application/json` / `application/yaml` | `--name my-config.yaml` |
 | `json` | `config.json` / `config.yaml` | 同上 | `--name config.prod.json` |
 | `env` | `.env` | `text/plain` | `--name .env.production` |
+| `singbox` | `sing-box.server.*` / `sing-box.client.*` / `sing-box-links.txt` | `application/json` / `application/yaml` / `text/plain` | 由 `options.target` 决定，不受 `--name` 影响 |
 
 - `--name` 允许子目录（自动创建）：`--name sub/deep/custom.yaml`；
 - 产物名不允许绝对路径或包含 `..`，否则报
@@ -273,6 +273,10 @@ devconfig-gen generate --provider env --input examples/vars.yaml \
 # 7. 写入子目录
 devconfig-gen generate --provider custom --input examples/custom.yaml \
   --output-dir dist --name envs/prod/custom.yaml
+
+# 8. sing-box 领域 Provider（server / client / links）
+devconfig-gen generate --provider singbox --input examples/singbox.yaml \
+  --output-dir dist --format yaml
 ```
 
 ## validate
@@ -340,46 +344,6 @@ devconfig-gen validate --provider env --input broken.yaml --json \
 printf 'app:\n  port: 1234\n' > config.txt
 devconfig-gen validate --provider custom --input config.txt --format yaml
 ```
-
-## init
-
-交互式终端向导，详见[交互式向导](wizard.md)。
-
-```text
-usage: devconfig-gen init [-h] [--provider PROVIDER] [--input INPUT]
-                          [--output-dir OUTPUT_DIR] [--format {json,yaml}]
-```
-
-| 参数 | 默认 | 说明 |
-| --- | --- | --- |
-| `--provider` | `custom` | 向导使用的 Provider |
-| `--input` | 无 | 预填向导的现有配置文件（根需为映射） |
-| `--output-dir` | `.` | 产物输出目录 |
-| `--format` | 无 | 指定后跳过输出格式提问 |
-
-退出码为 `0`（成功生成）或 `1`（取消、输入提前结束、未知 Provider、无向导
-步骤或生成失败）。
-
-## ui
-
-启动本地 Web 工作台，详见 [Web 工作台与 HTTP API](web-ui.md)。
-
-```text
-usage: devconfig-gen ui [-h] [--host HOST] [--port PORT] [--no-browser]
-                        [--workspace WORKSPACE]
-```
-
-| 参数 | 默认 | 说明 |
-| --- | --- | --- |
-| `--host` | `127.0.0.1` | 监听地址 |
-| `--port` | `8848` | 监听端口 |
-| `--no-browser` | 否 | 不自动打开浏览器 |
-| `--workspace` | 当前目录 | 允许 `/api/export` 写入的根目录 |
-
-服务持续运行，按 `Ctrl+C` 停止并返回 `0`。1.1.0 起，工作台的字段渲染改为
-查表驱动，并支持 Provider 通过可选方法 `web_ui_widgets()` 注册自定义 Widget
-（`GET /api/widgets`），同时新增了汉堡侧边栏；这些都属于 WebUI 能力，细节见
-[Web 工作台与 HTTP API](web-ui.md#provider-自定义-widget)。
 
 ## 脚本化与自动化
 

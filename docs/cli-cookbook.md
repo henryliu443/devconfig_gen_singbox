@@ -237,7 +237,7 @@ devconfig-gen generate --provider custom --input configs/base.yaml \
 git diff --exit-code -- generated/custom.json
 ```
 
-测试套件（143 个用例）包含 CLI 与 Python API 产物逐字节一致的断言
+测试套件包含 CLI 与 Python API 产物逐字节一致的断言
 （`tests/test_api_parity.py`），可作为该契约的回归保障。
 
 ## 常用组合
@@ -256,9 +256,6 @@ devconfig-gen generate --provider custom \
   --input configs/base.yaml --input configs/prod.yaml \
   --set app.port=9090 \
   --output-dir dist --name prod.yaml
-
-# 4) 引导式补齐未知字段
-devconfig-gen init --provider custom --input configs/base.yaml
 ```
 
 ## 注意事项

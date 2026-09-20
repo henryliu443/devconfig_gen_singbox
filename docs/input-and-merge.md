@@ -105,4 +105,4 @@ result = generate_pipeline(
 ```
 
 测试 `tests/test_api_parity.py` 断言 CLI 与 Python API 生成的 JSON/YAML 产物
-逐字节一致；该断言是 143 个用例测试套件的一部分。
+逐字节一致；该断言是测试套件的一部分。

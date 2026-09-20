@@ -1,7 +1,7 @@
 # 架构总览
 
 本页是架构摘要。完整的设计决策与边界说明见仓库根目录
-[ARCHITECTURE.md](https://github.com/henryliu443/DevConfig-Gen/blob/main/ARCHITECTURE.md)。
+[ARCHITECTURE.md](https://github.com/henryliu443/devconfig_gen_singbox/blob/main/ARCHITECTURE.md)。
 
 ## 目标
 
@@ -9,18 +9,20 @@
 （JSON/YAML/纯文本），由可扩展的 Provider 驱动。引擎与具体领域无关，
 schema、规范化与校验都属于 Provider。
 
+本仓库是父仓库 `DevConfig-Gen` 的子仓库：引擎与 Provider 契约由父仓库拥有，
+本仓库只新增 sing-box 领域 Provider。使用面收敛为 **CLI** 与 **Python API**。
+
 ## 分层
 
 ```text
-CLI（generate/validate/schema）   init 向导   ui 工作台
-        |                             |            |
-        +-----------------------------+------------+
-                                      v
+CLI（providers / schema / generate / validate）
+        |
+        v
 engine.py  —— build_request / generate_pipeline / generate_from_file
   |           diagnose_request / describe_provider
   |           （唯一共享流水线，包含多源 deep_merge）
   v
-ProviderRegistry -> ConfigProvider（custom / json / env）
+ProviderRegistry -> ConfigProvider（custom / json / env / singbox）
   |
   v
 formats.py   （JSON/YAML 加载、序列化、检测、媒体类型、deep_merge、coerce_scalar）
@@ -51,7 +53,7 @@ Provider.generate       产物（数据结构或预渲染字符串）
 engine._persist         序列化 + 可选写入 output_dir
         |
         v
-JSON / YAML / .env
+JSON / YAML / .env / 纯文本
 ```
 
 ## 数据契约（`models.py`）
@@ -62,10 +64,7 @@ JSON / YAML / .env
 - `GeneratedArtifact`：`name`、`content`（数据结构或字符串）、`media_type`；
 - `GenerationResult`：Provider 名称与产物；
 - `ProviderField` / `ProviderStep`：声明式元数据，支持可选 `i18n`；
-- `ConfigProvider`：Provider 协议；
-- `WebUIWidgets`：可选、仅文档性的协议，声明 Provider 通过
-  `web_ui_widgets()` 提供的自定义 WebUI Widget（`field_type` → JavaScript
-  工厂源码）。它从不是必需契约，未实现它的 Provider 渲染行为完全不变。
+- `ConfigProvider`：Provider 协议。
 
 ## 引擎（`engine.py`）
 
@@ -80,45 +79,42 @@ JSON / YAML / .env
 持久化按 `media_type` 选择序列化器；字符串产物原样写入；产物名逃逸输出
 目录会被拒绝。
 
-## 交互式客户端（`interactive.py`、`web_ui.py`）
+## 领域 Provider（`providers/singbox/`）
 
-两个客户端都只消费同一份声明式元数据与同一条流水线，自身不包含生成、校验或
-序列化逻辑：
+`singbox` 是本仓库的领域 Provider，按 `PROVIDER_STANDARD.md` 分层：
 
-- `interactive.py`：`init` 终端向导，按 `steps` 与 `ProviderField.type`
-  提示，经 `diagnose_request` 校验、`generate` 写入，失败时保留答案重试；
-- `web_ui.py`：`ui` 单页工作台，由标准库 `ThreadingHTTPServer` 提供内嵌的
-  HTML/CSS/JS（零构建），通过小型 JSON API 调用引擎。
-  - 字段渲染**查表驱动**：`WidgetRegistry` 为内置六种类型（`string`、
-    `integer`、`boolean`、`mapping`、`document`、`tree`）各注册一个默认
-    Widget；`tree` 是递归编辑器，`document` 是拖拽区加内联编辑器。
-  - Provider 可通过可选方法 `web_ui_widgets()` 注册自定义 Widget，经
-    `GET /api/widgets?provider=<name>` 下发并注册进同一张表；求值失败或未知
-    类型回退到 `string`，未实现该方法的 Provider 行为不变。
-  - 左上角 `☰` 汉堡侧边栏提供仓库、文档站点、问题反馈与邮箱快捷入口；另有
-    “全部清空”重置与空上下文检测，避免陈旧草稿遮挡初始数据。
+```text
+providers/singbox/
+├── provider.py     分派 + 组装（不含变体字段名）
+├── schema.py       Context Schema + 结构校验
+├── models.py       领域数据类
+├── plugins/        每个协议变体一个模块
+│   ├── base.py     Plugin 接口 + 通用工具
+│   ├── anytls.py
+│   ├── tuic.py
+│   └── hysteria2.py
+├── route.py        DNS + Route 组装（读 data/rules.json）
+├── links.py        分享链接聚合
+└── data/rules.json 内嵌路由规则表
+```
 
-Web 服务器按“仅本机”设计：拒绝非回环 `Host`（DNS rebinding 防护）；
-`/api/export` 被沙箱限制在 `workspace_root` 内；各 JSON 接口对错误输入或未知
-Provider 返回结构化 `4xx`。这些模块由 `devconfig_gen.__init__` 惰性导入
-（PEP 562），因此 `import devconfig_gen` 不会导入 `http.server` 或 `webbrowser`。
+上游 sing-box 的字段变化只改对应 `plugins/<variant>.py`；`provider.py` /
+`schema.py` / `route.py` 与产物契约保持稳定，不做版本追逐。
 
 ## 设计决策摘要
 
 1. `models.py` 是唯一稳定的核心数据契约；
 2. `registry.py` 是扩展缝：注册一个小写 `name` 的对象即可新增 Provider；
 3. 引擎不直接导入任何具体 Provider，只通过注册表工作；
-4. CLI、Python API、向导、Web 工作台共享同一条代码路径，产物逐字节一致；
+4. CLI 与 Python API 共享同一条代码路径，产物逐字节一致；
 5. 导入包无副作用；只有显式传入 `output_dir` 才会写文件；
-6. Provider 元数据（`diagnose`、`steps`、`describe_schema`、
-   `web_ui_widgets`）可选，最小 Provider 只需 `name`、`validate`、`generate`；
+6. Provider 元数据（`diagnose`、`steps`、`describe_schema`）可选，最小
+   Provider 只需 `name`、`validate`、`generate`；
 7. 序列化确定：JSON/YAML 保留插入顺序；
 8. 核心引擎不包含远程操作、系统修改、凭据处理或部署；唯一的文件写入是
-   显式的 `output_dir`（Web UI 由 workspace 沙箱限制）；
-9. WebUI 字段渲染是唯一曾经硬编码、现已开放的扩展点，Provider 仍是唯一
-   扩展点，不引入第二套体系。
+   显式的 `output_dir`。
 
 ## 范围之外
 
 DevConfig-Gen 不执行部署、远端仓库操作、服务管理、凭据存储，也不自动迁移
-机器状态。
+机器状态；本仓库不提供终端向导与 Web 工作台。

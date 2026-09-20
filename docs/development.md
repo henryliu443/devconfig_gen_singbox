@@ -3,17 +3,17 @@
 ## 项目结构
 
 ```text
-DevConfig-Gen/
+DevConfig-Gen_SingBox/
 ├── src/devconfig_gen/          核心包（见 docs/index.md 模块地图）
-│   ├── providers/              custom / json / env 三个内置 Provider
+│   ├── providers/              custom / json / env 内置 Provider
+│   │   └── singbox/            sing-box 领域 Provider（本仓库新增）
 │   └── py.typed                类型标记
-├── tests/                      unittest 测试套件（143 个用例）
-├── examples/                   示例输入（custom.json / custom.yaml / vars.yaml）
+├── tests/                      unittest 测试套件
+├── examples/                   示例输入（custom.* / vars.yaml / singbox.yaml）
 ├── docs/                       本技术文档（MkDocs 源）
 ├── mkdocs.yml                  MkDocs + Material 站点配置
 ├── ARCHITECTURE.md             架构与设计决策
-├── PROVIDER_STANDARD.md        Provider 铁标准（白皮书）
-├── PIPELINE_PLAN.md            全链路 pluggable 定调
+├── PROVIDER_STANDARD.md        Provider 铁标准（白皮书，父仓库拥有）
 ├── CHANGELOG.md                版本变更记录
 ├── pyproject.toml              PEP 517/621 打包配置
 └── .github/workflows/          CI / 文档 / 发布流水线
@@ -31,7 +31,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 python -m unittest discover -s tests -v
 ```
 
-测试套件共 143 个用例，不需要 PyYAML：默认走内置 YAML 子集解析器/序列化器；
+测试套件不需要 PyYAML：默认走内置 YAML 子集解析器/序列化器；
 PyYAML 分支在源码中以 `# pragma: no cover` 标注，不作为 CI 的必需路径。
 
 ### 测试文件与覆盖范围
@@ -43,13 +43,11 @@ PyYAML 分支在源码中以 `# pragma: no cover` 标注，不作为 CI 的必�
 | `test_devconfig_core.py` | `json` Provider 持久化、注册表、产物名越界拒绝 |
 | `test_custom_provider.py` | `custom` 的任意结构、上下文解包、命名与媒体类型 |
 | `test_env_provider.py` | `env` 的扁平化、标量转换、诊断、`.env` 持久化 |
+| `test_singbox_provider.py` | `singbox` 的 Schema 校验、各 plugin 构建、`target` 产物、双格式确定性、CLI |
 | `test_merge.py` | `deep_merge` 规则、多输入顺序、`--set` 语义 |
 | `test_provider_metadata.py` | `ProviderStep`/`ProviderField`、`i18n`、`diagnose` 降级、内置注册 |
 | `test_cli_e2e.py` | 以子进程方式端到端执行各 CLI 子命令与退出码 |
 | `test_api_parity.py` | CLI 与 Python API 产物逐字节一致 |
-| `test_interactive.py` | 向导的字段提示、重试、EOF、文件加载 |
-| `test_web_ui.py` | 单页 HTML 与全部 JSON 接口、Host 校验、导出沙箱 |
-| `test_web_ui_widgets.py` | 默认 Widget 渲染、注册表覆盖与回退、`/api/widgets`、自定义 Widget 注入 |
 
 运行单个测试文件：
 
@@ -70,14 +68,14 @@ pip install -e ".[dev]"    # 安装 build / wheel / PyYAML
 python -m build            # 生成 dist/*.whl 与 dist/*.tar.gz
 ```
 
-- 包名：`devconfig-gen`，导入名：`devconfig_gen`；
+- 包名：`devconfig_gen_singbox`，导入名：`devconfig_gen`；
 - 控制台脚本：`devconfig-gen = devconfig_gen.cli:main`；
 - 运行时依赖为空；可选依赖 `yaml`（PyYAML）、`dev`（构建工具）与
   `docs`（`mkdocs-material`）；
 - 版本同时出现在 `pyproject.toml` 与 `src/devconfig_gen/__init__.py` 的
   `__version__`；CLI `--version` 直接读取 `__version__`，因此发布时两处需
   保持一致（测试 `test_version_matches_package_version` 会校验 CLI 与包
-  版本一致）。当前版本为 `1.1.0`。
+  版本一致）。当前版本为 `2.0.0`。
 
 ## 文档站点（GitHub Pages）
 
@@ -132,8 +130,7 @@ Trusted Publishing（OIDC）发布。发布操作只在 CI 中执行；本地开
 来自 `AGENTS.md` 的项目约束：
 
 - 不要向核心引擎添加网络、部署、服务管理、凭据或系统修改行为；
-- CLI 与 `init`/`ui` 客户端保持“薄”：只调用
-  `devconfig_gen.engine` 的共享流水线，不重复实现生成逻辑；
+- CLI 保持“薄”：只调用 `devconfig_gen.engine` 的共享流水线，不重复实现生成逻辑；
 - 保持输出确定性：JSON/YAML 保留插入顺序，产物逐字节稳定；
 - 每个行为变更都要有测试；完成前运行完整测试套件；
 - 公共 API、CLI、格式或 Provider 契约变化时，同步更新 `README.md` 与
@@ -147,8 +144,6 @@ Trusted Publishing（OIDC）发布。发布操作只在 CI 中执行；本地开
   `docs/cli-cookbook.md` 中受影响的配方；
 - 新增/修改 Provider、格式行为、合并语义时，更新对应主题页
   （`providers.md`、`formats.md`、`input-and-merge.md`）；
-- 修改 Widget 协议或 `ctx` 字段时，同步更新 `PROVIDER_STANDARD.md`、
-  `ARCHITECTURE.md` 与 `docs/web-ui.md`；
 - 架构或设计决策变化时更新根目录 `ARCHITECTURE.md`，并同步
   `docs/architecture.md` 的摘要；
 - `docs/cli.md` 的命令/参数应与 `devconfig-gen <command> --help` 保持一致，

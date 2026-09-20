@@ -1,0 +1,97 @@
+{
+  "direct_exact": [
+    "blzddist1-a.akamaihd.net",
+    "download.jetbrains.com",
+    "file-igamecj.akamaized.net",
+    "identity.apple.com",
+    "images-cn.ssl-images-amazon.com",
+    "officecdn-microsoft-com.akamaized.net",
+    "speedtest.macpaw.com",
+    "www-cdn.icloud.com.akadns.net"
+  ],
+  "proxy_exact": [
+    "copilot.microsoft.com",
+    "copilot.bing.com",
+    "cdn.angruo.com",
+    "api.statsig.com",
+    "browser-intake-datadoghq.com",
+    "chat.openai.com.cdn.cloudflare.net",
+    "o33249.ingest.sentry.io",
+    "openai-api.arkoselabs.com",
+    "openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net",
+    "openaicomproductionae4b.blob.core.windows.net",
+    "production-openaicom-storage.azureedge.net",
+    "static.cloudflareinsights.com",
+    "chatgpt.com",
+    "generativelanguage.googleapis.com",
+    "ai.google.dev"
+  ],
+  "direct_suffix": [
+    "aaplimg.com",
+    "apple-cloudkit.com",
+    "apple.co",
+    "apple.news",
+    "apple.com.cn",
+    "appstore.com",
+    "cdn-apple.com",
+    "icloud-content.com",
+    "icloud.com",
+    "icloud.com.cn",
+    "me.com",
+    "mzstatic.com",
+    "apple.com",
+    "itunes.com"
+  ],
+  "proxy_suffix": [
+    "apple-relay.akamaized.net",
+    "apple-relay.apple.com",
+    "apple-relay.cloudflare.com",
+    "apple-relay.fastly-edge.com",
+    "apple-relay.mask.apple-dns.net",
+    "m-team.cc",
+    "sciencemag.org",
+    "teamviewer.com",
+    "v2ex.com"
+  ],
+  "direct_keyword": [
+    "apple.com.edgekey.net"
+  ],
+  "proxy_keyword": [
+    "blogspot",
+    "pixiv",
+    "openaicom-api"
+  ],
+  "direct_cidr": [
+    "192.168.0.0/16",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "127.0.0.0/8",
+    "2403:300:a42::/48",
+    "2403:300:a51::/48",
+    "2620:149:a44::/48",
+    "2a01:b740:a42::/48"
+  ],
+  "proxy_cidr": [
+    "17.0.0.0/8",
+    "142.250.0.0/15",
+    "142.251.0.0/16",
+    "172.217.0.0/16",
+    "172.253.0.0/16",
+    "216.239.32.0/19",
+    "24.199.123.28/32",
+    "45.76.214.191/32",
+    "64.23.132.171/32",
+    "143.198.200.27/32",
+    "159.89.204.203/32",
+    "91.108.4.0/22",
+    "91.108.8.0/22",
+    "91.108.12.0/22",
+    "91.108.16.0/22",
+    "91.108.56.0/22",
+    "109.239.140.0/24",
+    "149.154.160.0/20",
+    "2001:B28:F23D::/48",
+    "2001:B28:F23F::/48",
+    "2001:67C:4E8::/48"
+  ]
+}

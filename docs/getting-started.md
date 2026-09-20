@@ -12,8 +12,8 @@
 ### 方式一：从仓库安装（开发模式）
 
 ```bash
-git clone https://github.com/henryliu443/DevConfig-Gen.git
-cd DevConfig-Gen
+git clone https://github.com/henryliu443/devconfig_gen_singbox.git
+cd devconfig_gen_singbox
 pip install -e ".[yaml]"     # 可选：安装 PyYAML
 ```
 
@@ -24,8 +24,8 @@ pip install -e ".[yaml]"     # 可选：安装 PyYAML
 发布工作流会在推送 `v*` 标签时构建并发布到 PyPI：
 
 ```bash
-pip install devconfig-gen            # 运行时零依赖
-pip install "devconfig-gen[yaml]"    # 可选 PyYAML
+pip install devconfig_gen_singbox            # 运行时零依赖
+pip install "devconfig_gen_singbox[yaml]"    # 可选 PyYAML
 ```
 
 ### 方式三：不安装，直接运行
@@ -40,13 +40,12 @@ PYTHONPATH=src python3 -m devconfig_gen.cli --help
 ## 验证安装
 
 ```bash
-devconfig-gen --version      # devconfig-gen 1.1.0
-devconfig-gen providers      # 输出三行：custom、env、json
+devconfig-gen --version      # devconfig-gen 2.0.0
+devconfig-gen providers      # 输出四行：custom、env、json、singbox
 ```
 
-当前版本为 **1.1.0**，测试套件共 **143** 个用例。1.1.0 为 Web 工作台引入了
-查表驱动的字段渲染（六种内置类型 + Provider 自定义 Widget）、`☰` 汉堡侧边栏
-与空上下文检测；CLI 与 Python API 的行为保持不变。
+当前版本为 **2.0.0**。本仓库只保留稳定的 CLI 与 Python API（不再提供终端向导
+与 Web 工作台），并在父仓库的中立核心之上新增 `singbox` 领域 Provider。
 
 ## 第一个产物（3 分钟）
 
@@ -116,31 +115,25 @@ devconfig-gen generate \
   --output-dir generated --format yaml
 ```
 
-## 引导式流程
-
-终端向导（适合无头服务器 / SSH）：
+## sing-box 领域 Provider
 
 ```bash
-devconfig-gen init --provider custom
+devconfig-gen validate --provider singbox --input examples/singbox.yaml
+devconfig-gen generate --provider singbox --input examples/singbox.yaml \
+  --output-dir generated --format yaml
+# generated/sing-box.server.yaml
+# generated/sing-box.client.yaml
+# generated/sing-box-links.txt
 ```
 
-本地 Web 工作台（默认 `http://127.0.0.1:8848`）：
-
-```bash
-devconfig-gen ui
-devconfig-gen ui --workspace ~/projects/my-app --no-browser
-```
-
-工作台支持中英双语、亮/暗主题、分步表单、实时预览与草稿自动保存，字段渲染
-查表驱动；`custom` 提供递归树编辑器。界面细节见
-[Web 工作台与 HTTP API](web-ui.md)。
+产物集合由 context 中的 `options.target`（`server` / `client` / `both`）决定。
 
 ## 退出码
 
 | 退出码 | 含义 |
 | --- | --- |
-| `0` | 成功（`generate` 写出产物、`validate` 通过、向导完成、`ui` 被 Ctrl+C 停止） |
-| `1` | 校验失败，或向导被取消/输入结束 |
+| `0` | 成功（`generate` 写出产物、`validate` 通过） |
+| `1` | 校验失败 |
 | `2` | 输入或用法错误（未知 Provider、文件不存在、格式错误、`--set` 语法错误、产物名越界） |
 
 ## 下一步

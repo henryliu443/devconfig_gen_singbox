@@ -1,8 +1,7 @@
 """Provider-based developer configuration generation.
 
-The core package exposes the provider pipeline only. The interactive terminal
-wizard and the local web studio are imported lazily so that ``import
-devconfig_gen`` stays lightweight and free of any server or browser imports.
+The package exposes the provider pipeline and the stable CLI/Python API only.
+Importing it has no side effects.
 """
 
 from .engine import (
@@ -33,7 +32,6 @@ from .models import (
     GenerationResult,
     ProviderField,
     ProviderStep,
-    WebUIWidgets,
 )
 from .registry import ProviderRegistry, default_registry
 from .validation import ValidationError
@@ -49,7 +47,6 @@ __all__ = [
     "ProviderRegistry",
     "ProviderStep",
     "ValidationError",
-    "WebUIWidgets",
     "build_request",
     "coerce_scalar",
     "deep_merge",
@@ -65,28 +62,6 @@ __all__ = [
     "load_data",
     "load_file",
     "loads",
-    "run_interactive_wizard",
-    "run_web_ui",
     "validate_request",
 ]
-__version__ = "1.1.0"
-
-_LAZY_EXPORTS = {
-    "run_interactive_wizard": ("interactive", "run_interactive_wizard"),
-    "run_web_ui": ("web_ui", "run_web_ui"),
-}
-
-
-def __getattr__(name):
-    """Import the optional UI entry points on first use (PEP 562)."""
-
-    try:
-        module_name, attribute = _LAZY_EXPORTS[name]
-    except KeyError:
-        raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from None
-    import importlib
-
-    module = importlib.import_module(f".{module_name}", __name__)
-    value = getattr(module, attribute)
-    globals()[name] = value
-    return value
+__version__ = "2.0.0"

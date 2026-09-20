@@ -1,8 +1,7 @@
 # Python API
 
 `import devconfig_gen` 不会启动任何服务，也不会写文件；只有显式传入
-`output_dir` 时才会产生文件输出。Web UI / 向导入口是惰性导入的，导入包本身
-不会加载 `http.server` 或 `webbrowser`。
+`output_dir` 时才会产生文件输出。
 
 ## 包级导出
 
@@ -10,7 +9,7 @@
 from devconfig_gen import (
     # 数据契约
     ConfigProvider, Diagnostic, GeneratedArtifact, GenerationRequest,
-    GenerationResult, ProviderField, ProviderStep, WebUIWidgets,
+    GenerationResult, ProviderField, ProviderStep,
     # 引擎
     build_request, generate, generate_from_file, generate_pipeline,
     validate_request, diagnose_request, describe_provider,
@@ -19,18 +18,13 @@ from devconfig_gen import (
     load_data, load_file, loads,
     # 注册表与校验
     ProviderRegistry, default_registry, ValidationError,
-    # 惰性 UI 入口
-    run_interactive_wizard, run_web_ui,
 )
 ```
 
-`run_interactive_wizard` 与 `run_web_ui` 通过 PEP 562 惰性加载，首次访问时才
-导入对应模块。
-
 ## 引擎函数
 
-所有入口最终都会调用 `engine.generate`，因此 CLI、Python API、向导和
-Web 工作台共享完全相同的校验、生成与持久化路径。
+所有入口最终都会调用 `engine.generate`，因此 CLI 与 Python API 共享完全相同的
+校验、生成与持久化路径。
 
 ### generate
 
@@ -131,14 +125,11 @@ describe_provider(provider, registry=None) -> Sequence[ProviderStep]
 | `GenerationResult` | `provider`、`artifacts`、`diagnostics` | Provider 生成结果 |
 | `ProviderField` | `name`、`type`、`required`、`default`、`description`、`choices`、`minimum`、`maximum`、`title`、`i18n` | `title` 为空时 `as_dict()` 回退为 `name`；`i18n` 为空时省略 |
 | `ProviderStep` | `id`、`title`、`description`、`fields`、`i18n` | 步骤元数据 |
-| `ConfigProvider` | `name`、`generate`、`validate` | 结构化协议；`diagnose`、`describe_schema`/`steps`、`web_ui_widgets` 可选 |
-| `WebUIWidgets` | `web_ui_widgets()` | 可选、纯文档性协议：把 `field_type` 映射到 JavaScript 工厂源码；永不强制 |
+| `ConfigProvider` | `name`、`generate`、`validate` | 结构化协议；`diagnose`、`describe_schema`/`steps` 可选 |
 
-`ProviderField.type` 的约定取值（决定客户端如何渲染）：
-`string`、`integer`、`boolean`、`mapping`/`dict`、`document`、`tree`。
-`web_ui_widgets()` 可为 Web 工作台注册额外的类型；未声明的类型回退到
-`string`，未实现该方法的 Provider 行为不变。详见
-[Provider 参考与开发](providers.md#自定义-webui-widget可选)。
+`ProviderField.type` 的约定取值（客户端渲染提示）：
+`string`、`integer`、`boolean`、`mapping`、`document`、`tree`。详见
+[Provider 参考与开发](providers.md)。
 
 ## 格式 API（formats）
 
@@ -178,11 +169,11 @@ formats.coerce_scalar("9090")             # 9090
 
 ```python
 from devconfig_gen import ProviderRegistry
-from devconfig_gen.providers import CustomProvider, EnvProvider, JsonProvider
+from devconfig_gen.providers import CustomProvider, EnvProvider, JsonProvider, SingBoxProvider
 
-registry = ProviderRegistry((CustomProvider(), JsonProvider(), EnvProvider()))
-registry.names()            # ('custom', 'env', 'json')
-registry.get("custom")
+registry = ProviderRegistry((CustomProvider(), JsonProvider(), EnvProvider(), SingBoxProvider()))
+registry.names()            # ('custom', 'env', 'json', 'singbox')
+registry.get("singbox")
 registry.register(MyProvider())
 ```
 
@@ -191,7 +182,7 @@ registry.register(MyProvider())
 - 重复注册同名 Provider 抛出 `ValueError`；
 - `get` 会去除首尾空白并转小写；未知名称抛出 `ValueError`，错误信息包含
   可用名称列表；
-- `default_registry` 已注册 `custom`、`json`、`env`。
+- `default_registry` 已注册 `custom`、`json`、`env`、`singbox`。
 
 ## 校验 API（validation）
 

@@ -7,7 +7,6 @@ on:
     branches: [docs]
     paths:
       - "docs/**"
-      - "landing/**"
       - "mkdocs.yml"
       - "pyproject.toml"
       - ".github/workflows/docs.yml"
@@ -40,16 +39,11 @@ jobs:
       - name: Build site (strict)
         run: mkdocs build --strict
 
-      - name: Add landing page
-        run: |
-          mkdir -p site
-          cp landing/index.html site/index.html
-
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: site/docs
 
   deploy:
     needs: build
