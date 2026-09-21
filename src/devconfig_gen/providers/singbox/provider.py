@@ -37,6 +37,11 @@ TUN_EXCLUDED_ROUTES = [
     # Android VpnService already excludes loopback/link-local; excluding them
     # explicitly makes `configure tun interface: Bad address` (sing-box #2030).
     "10.0.0.0/8",
+    # Parallels Desktop Shared Network (host 10.211.55.1, DHCP/DNS/NAT for
+    # guest VMs). Listed explicitly so macOS strict_route does not capture
+    # VM NAT/DNS traffic into the sing-box TUN.
+    "10.211.55.0/24",
+    "10.211.55.1/32",
     "100.64.0.0/10",
     "172.16.0.0/12",
     "192.168.0.0/16",
