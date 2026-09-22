@@ -153,11 +153,13 @@ def _run(args) -> int:
     try:
         if getattr(args, "command", None) == "certs":
             from .adapters.acme.prune import DEFAULT_ACME_HOME, prune_certs
-            from .core.command import LocalCommandRunner, RecordingRunner
+            from .core.command import LocalCommandRunner
 
             keep = [item for item in (getattr(args, "keep", "") or "").split(",") if item.strip()]
             dry_run = not bool(getattr(args, "apply", False))
-            runner = RecordingRunner() if dry_run else LocalCommandRunner()
+            # Always read the real filesystem so a dry run actually reports what
+            # it *would* do; deletion only happens when --apply is passed.
+            runner = LocalCommandRunner()
             result = prune_certs(
                 runner,
                 acme_home=getattr(args, "acme_home", DEFAULT_ACME_HOME),

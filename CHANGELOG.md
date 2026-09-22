@@ -6,6 +6,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.5] - 2026-09-22
+
+### Fixed
+
+- `certs` dry run now reads the real filesystem (it previously reported an
+  empty keep/remove set because it used the recording runner). Deletion still
+  only happens with `--apply`.
+
 ## [2.1.4] - 2026-09-22
 
 ### Added
