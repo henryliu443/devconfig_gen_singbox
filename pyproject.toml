@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "devconfig_gen_singbox"
-version = "2.1.7"
+version = "2.1.8"
 authors = [
   { name = "henryliu443", email = "henryliu443@gmail.com" },
 ]

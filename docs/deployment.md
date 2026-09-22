@@ -141,6 +141,14 @@ devconfig_gen_singbox deploy
      tuic: e5f6a7b8
      hy2: c9d0e1f2
 
+   # 协议级参数（可选；不写则用下面这些默认值）
+   protocol_params:
+     anytls:
+       decoy_server: react.dev        # REALITY 伪装站（默认 www.cloudflare.com）
+       decoy_port: 443
+     hysteria2:
+       masquerade: https://react.dev  # HY2 伪装网址（默认 https://www.cloudflare.com）
+
    adapters:
      secrets: singbox-subprocess  # 调用 sing-box 二进制生成高强度 UUID 与 Reality 密钥
      dns: cloudflare               # DNS 必填：A 记录由 Cloudflare 管理（需 CF_Token / CF_Zone_ID）

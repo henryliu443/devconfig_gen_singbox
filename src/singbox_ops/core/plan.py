@@ -106,6 +106,7 @@ class DeployPlan:
     subdomain_prefixes: Mapping[str, str] = field(default_factory=dict)
     routing: Mapping[str, Any] = field(default_factory=dict)
     dns: Mapping[str, Any] = field(default_factory=dict)
+    protocol_params: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
     fingerprint: str = DEFAULT_FINGERPRINT
     target: str = "both"
     output_format: str = DEFAULT_FORMAT
@@ -150,6 +151,8 @@ class DeployPlan:
             data["subdomain_prefixes"] = dict(self.subdomain_prefixes)
         data.setdefault("routing", dict(self.routing))
         data.setdefault("dns", dict(self.dns))
+        if self.protocol_params:
+            data["protocol_params"] = {key: dict(value) for key, value in self.protocol_params.items()}
         client = dict(data.get("client") or {})
         client.setdefault("fingerprint", self.fingerprint)
         if self.server_ip:
@@ -231,6 +234,11 @@ class DeployPlan:
             subdomain_prefixes=prefixes,
             routing=dict(_as_mapping(raw.get("routing"), "routing")),
             dns=dict(_as_mapping(raw.get("dns"), "dns")),
+            protocol_params={
+                str(proto): dict(value)
+                for proto, value in _as_mapping(raw.get("protocol_params"), "protocol_params").items()
+                if isinstance(value, Mapping)
+            },
             fingerprint=_as_str(client.get("fingerprint"), "client.fingerprint")
             or DEFAULT_FINGERPRINT,
             target=target,

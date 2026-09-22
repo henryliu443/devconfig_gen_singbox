@@ -25,7 +25,12 @@ from .core.context_builder import build_context
 from .core.exceptions import OpsError
 from .core.plan import DeployPlan, load_plan
 from .core.orchestrator import DRY_RUN_IP, build_suite, deploy, destroy, make_runner
-from .core.protocols import PROTOCOLS
+from .core.protocols import (
+    DEFAULT_ANYTLS_DECOY_PORT,
+    DEFAULT_ANYTLS_DECOY_SERVER,
+    DEFAULT_HY2_MASQUERADE,
+    PROTOCOLS,
+)
 from .core.ui import UI
 
 PROG = "devconfig_gen_singbox"
@@ -151,7 +156,7 @@ def interactive_plan(domain=None, protocols=None, reader=None, writer=None, ui=N
     ui = ui or UI(writer)
     ui.banner(f"{PROG} · 交互式部署向导", "逐项回答；回车使用默认值。Ctrl-C 可随时退出。")
 
-    ui.section("1/4 基础")
+    ui.section("1/5 基础")
     while not domain:
         domain = _ask(ui, "主域名", "例如 example.com；协议主机名 = <前缀>.<主域名>",
                       required=True, reader=reader, writer=writer)
@@ -167,7 +172,32 @@ def interactive_plan(domain=None, protocols=None, reader=None, writer=None, ui=N
     )
     server_ip = _ask(ui, "服务器公网 IP", "留空=自动探测", reader=reader, writer=writer)
 
-    ui.section("2/4 Cloudflare（DNS 必填）")
+    protocol_list = [item.strip() for item in str(protocols).split(",") if item.strip()]
+    protocol_params: dict = {}
+    if "anytls" in protocol_list or "hysteria2" in protocol_list:
+        ui.section("2/5 协议参数")
+    if "anytls" in protocol_list:
+        protocol_params["anytls"] = {
+            "decoy_server": _ask(
+                ui, "REALITY 伪装站 (decoy server)",
+                f"REALITY 握手伪装的目标站点；证书 SNI 也用这个（默认 {DEFAULT_ANYTLS_DECOY_SERVER}）",
+                default=DEFAULT_ANYTLS_DECOY_SERVER, reader=reader, writer=writer,
+            ),
+            "decoy_port": _ask(
+                ui, "REALITY 伪装端口", f"通常 {DEFAULT_ANYTLS_DECOY_PORT}",
+                default=str(DEFAULT_ANYTLS_DECOY_PORT), reader=reader, writer=writer,
+            ),
+        }
+    if "hysteria2" in protocol_list:
+        protocol_params["hysteria2"] = {
+            "masquerade": _ask(
+                ui, "Hysteria2 伪装网址 (masquerade)",
+                f"HTTP 伪装目标 URL（默认 {DEFAULT_HY2_MASQUERADE}）",
+                default=DEFAULT_HY2_MASQUERADE, reader=reader, writer=writer,
+            ),
+        }
+
+    ui.section("3/5 Cloudflare（DNS 必填）")
     ui.warn("DNS A 记录由 Cloudflare 管理，因此 CF 凭据必填（仅本次内存使用，不写盘）")
     env = {
         "CF_Token": _ask_secret(
@@ -185,23 +215,24 @@ def interactive_plan(domain=None, protocols=None, reader=None, writer=None, ui=N
         default=True, reader=reader, writer=writer,
     )
 
-    ui.section("3/4 运行时")
+    ui.section("4/5 运行时")
     use_runtime = _ask_yes_no(
         ui, "启用运行时适配器？",
         "systemd / nftables / watchdog / 每日自动升级（生产建议 Y）",
         default=True, reader=reader, writer=writer,
     )
 
-    ui.section("4/4 产物路径")
+    ui.section("5/5 产物路径")
     server_out = _ask(ui, "服务端配置", "sing-box 主配置", default=DEFAULT_SERVER_OUT, reader=reader, writer=writer)
     client_out = _ask(ui, "客户端配置", "可导入 GUI 的完整客户端配置", default=DEFAULT_CLIENT_OUT, reader=reader, writer=writer)
     links_out = _ask(ui, "分享链接", "anytls:// tuic:// hy2:// 文本", default=DEFAULT_LINKS_OUT, reader=reader, writer=writer)
 
     plan = {
         "domain_root": domain,
-        "protocols": [item.strip() for item in str(protocols).split(",") if item.strip()],
+        "protocols": protocol_list,
         "tunnel_mode": tunnel_mode,
         "server_ip": server_ip or "auto",
+        "protocol_params": protocol_params,
         "adapters": {
             "secrets": "singbox-subprocess",
             "dns": "cloudflare",
@@ -235,6 +266,12 @@ def _confirm(ui: UI, plan, dry_run: bool, reader=None, writer=None) -> bool:
     ui.kv("DNS", adapters.get("dns") or "跳过（自己管理）")
     ui.kv("证书", adapters.get("acme") or "跳过（自己管理）")
     ui.kv("运行时", ", ".join(f"{k}={v}" for k, v in runtime.items() if v) or "关闭")
+    params = plan.protocol_params or {}
+    if params.get("anytls"):
+        anytls = params["anytls"]
+        ui.kv("REALITY decoy", f"{anytls.get('decoy_server')}:{anytls.get('decoy_port', 443)}")
+    if params.get("hysteria2"):
+        ui.kv("HY2 masquerade", params["hysteria2"].get("masquerade"))
     ui.kv("服务端配置", plan.outputs.get("server_config", "?"))
     if dry_run:
         ui.warn("DRY-RUN：只打印将执行的步骤，不改动系统")

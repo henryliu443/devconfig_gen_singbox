@@ -3,12 +3,12 @@
 CLI 是 DevConfig-Gen 的主要使用面。所有命令都是无状态、脚本友好的：输入由
 参数和文件决定，产物写到显式目录，结果通过退出码和可选的 JSON 输出表达。
 
-当前版本为 **2.1.7**；`devconfig_gen_singbox --version` 会打印包内
+当前版本为 **2.1.8**；`devconfig_gen_singbox --version` 会打印包内
 `devconfig_gen.__version__`，例如：
 
 ```text
 $ devconfig_gen_singbox --version
-devconfig_gen_singbox 2.1.7
+devconfig_gen_singbox 2.1.8
 ```
 
 两种调用方式等价：
@@ -34,7 +34,7 @@ PYTHONPATH=src python3 -m devconfig_gen.cli <command> [options]   # 源码运行
 | 选项 | 说明 |
 | --- | --- |
 | `-h, --help` | 查看帮助；也可用于子命令（`devconfig_gen_singbox generate --help`） |
-| `--version` | 打印 `devconfig_gen_singbox <version>`（读取包内 `__version__`，当前为 `2.1.7`） |
+| `--version` | 打印 `devconfig_gen_singbox <version>`（读取包内 `__version__`，当前为 `2.1.8`） |
 
 子命令是必填项：不带命令直接运行会由 argparse 报错并返回退出码 `2`。
 

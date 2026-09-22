@@ -49,6 +49,29 @@ class ContextBuilderTests(unittest.TestCase):
         needed = needed_certificates(self.plan)
         self.assertEqual(needed, {"tuic": "tuic", "hysteria2": "hy2"})
 
+    def test_protocol_params_override_defaults(self):
+        plan = DeployPlan.from_mapping(
+            {
+                "domain_root": "example.com",
+                "protocols": ["anytls", "hysteria2"],
+                "protocol_params": {
+                    "anytls": {"decoy_server": "react.dev", "decoy_port": 8443},
+                    "hysteria2": {"masquerade": "https://react.dev"},
+                },
+            }
+        )
+        secrets = static_secrets(("anytls", "hysteria2"))
+        context = build_context(
+            plan,
+            secrets["credentials"],
+            "203.0.113.10",
+            subdomain_prefixes=secrets["subdomain_prefixes"],
+        )
+        protos = {item["type"]: item for item in context["network"]["protocols"]}
+        self.assertEqual(protos["anytls"]["reality"]["decoy_server"], "react.dev")
+        self.assertEqual(protos["anytls"]["reality"]["decoy_port"], 8443)
+        self.assertEqual(protos["hysteria2"]["masquerade"], "https://react.dev")
+
     def test_missing_prefix_raises(self):
         from singbox_ops.core.exceptions import AdapterError
 
