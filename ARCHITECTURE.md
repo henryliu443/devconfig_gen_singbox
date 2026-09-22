@@ -152,12 +152,13 @@ adapter suite                          pure server/client/links artifacts
 
 ### Clients
 
-This repository ships only two clients, both thin: the **CLI** (`cli.py`, argument
-parsing plus calls into `engine`) and the **Python API** (`engine` helpers). Both
-consume the same declarative metadata and the same pipeline; neither contains
-generation, validation, or serialization logic of its own. The terminal wizard
-and the local Web studio that exist in the parent repository are intentionally
-not part of this child fork.
+This repository ships thin clients only: the **CLI** (`cli.py`, argument parsing
+plus calls into `engine`), the **interactive terminal wizard** (`interactive.py`,
+`devconfig-gen init`), the **local Web studio** (`web_ui.py`, `devconfig-gen ui`),
+and the **Python API** (`engine` helpers). They all consume the same declarative
+metadata (`steps` / `diagnose`) and the same pipeline; none contains generation,
+validation, or serialization logic of its own. The wizard and studio work for
+every registered provider, including `singbox`.
 
 ## Design decisions
 
@@ -184,5 +185,6 @@ The `devconfig_gen` engine and its providers do not perform deployment, remote
 repository operations, service management, credential storage, or automatic
 migration of machine state. Those concerns live in the separate `singbox_ops`
 package, which is a *consumer* of the engine: it assembles a context, calls the
-pure pipeline, and carries out side effects through adapters. This child fork
-does not ship an interactive wizard or a Web UI.
+pure pipeline, and carries out side effects through adapters. The terminal
+wizard and the local Web studio remain thin clients over the same pure pipeline,
+so they add no side effects to the engine.

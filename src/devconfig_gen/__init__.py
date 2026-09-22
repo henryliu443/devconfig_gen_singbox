@@ -32,6 +32,7 @@ from .models import (
     GenerationResult,
     ProviderField,
     ProviderStep,
+    WebUIWidgets,
 )
 from .registry import ProviderRegistry, default_registry
 from .validation import ValidationError
@@ -47,6 +48,7 @@ __all__ = [
     "ProviderRegistry",
     "ProviderStep",
     "ValidationError",
+    "WebUIWidgets",
     "build_request",
     "coerce_scalar",
     "deep_merge",
@@ -64,4 +66,4 @@ __all__ = [
     "loads",
     "validate_request",
 ]
-__version__ = "2.1.0"
+__version__ = "2.1.1"

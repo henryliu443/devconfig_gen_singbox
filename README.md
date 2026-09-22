@@ -3,7 +3,7 @@
 > **A sing-box domain implementation built on top of DevConfig-Gen.**
 > **构建在 `DevConfig-Gen` 之上的 sing-box 领域实现（child / fork）。**
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.1.1-blue.svg)](CHANGELOG.md)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 ![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)
 ![Tests](https://img.shields.io/badge/tests-136%20passing-brightgreen.svg)
@@ -256,7 +256,8 @@ singbox-ops destroy --plan examples/singbox-deploy.yaml
 - 结构化校验与诊断（`Diagnostic` / `ValidationError`）
 - JSON/YAML 序列化（标准库 + 可选 PyYAML，内置子集解析器兜底）
 - 多源合并与 dotted-path 覆盖（`deep_merge`、`--set`）
-- CLI 与 Python API
+- CLI、**终端向导**（`devconfig-gen init`）、**本地 Web 工作台**
+  （`devconfig-gen ui`）与 Python API
 
 同时也继承中立的 Provider `custom` / `json` / `env`。本仓库在其之上新增领域
 Provider `singbox`：
@@ -276,6 +277,12 @@ devconfig-gen providers
 devconfig-gen generate --provider singbox --input examples/singbox.yaml --output-dir dist --format yaml
 devconfig-gen validate --provider singbox --input examples/singbox.yaml --json
 devconfig-gen schema   --provider singbox
+
+# 交互式终端向导（所有 provider 通用，含 singbox）
+devconfig-gen init --provider singbox --output-dir dist
+
+# 本地 Web 工作台（零构建，标准库 http.server）
+devconfig-gen ui --port 8848
 ```
 
 ```python
@@ -323,6 +330,8 @@ generate_pipeline(
 | 校验与诊断 | [`docs/validation.md`](docs/validation.md) | [validation](https://henryliu443.github.io/DevConfig-Gen/docs/validation/) |
 | Provider 开发 | [`docs/providers.md`](docs/providers.md) | [providers](https://henryliu443.github.io/DevConfig-Gen/docs/providers/) |
 | Python API | [`docs/python-api.md`](docs/python-api.md) | [python-api](https://henryliu443.github.io/DevConfig-Gen/docs/python-api/) |
+| 终端向导 | [`docs/wizard.md`](docs/wizard.md) | [wizard](https://henryliu443.github.io/DevConfig-Gen/docs/wizard/) |
+| Web 工作台 | [`docs/web-ui.md`](docs/web-ui.md) | [web-ui](https://henryliu443.github.io/DevConfig-Gen/docs/web-ui/) |
 | 架构总览 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | — |
 | Provider 铁标准 | [`PROVIDER_STANDARD.md`](PROVIDER_STANDARD.md) | — |
 

@@ -4,8 +4,9 @@
 引擎与稳定的 Provider 契约，本仓库只在其之上承载 **sing-box 领域 Provider**
 （`providers/singbox/`）。权威方向为 **parent → child → downstream**。
 
-本仓库只保留稳定的 **CLI** 与 **Python API** 两个使用面（不再提供终端向导与
-Web 工作台）。安装与第一个产物请从 [安装与快速开始](getting-started.md) 开始。
+使用面包括稳定的 **CLI** 与 **Python API**，以及 **终端向导**（`devconfig-gen init`）
+和 **本地 Web 工作台**（`devconfig-gen ui`）。安装与第一个产物请从
+[安装与快速开始](getting-started.md) 开始。
 
 ## 领域 Scope：sing-box
 
@@ -102,5 +103,5 @@ src/devconfig_gen/
 
 ## 版本
 
-当前版本 `2.1.0`（`pyproject.toml`、`devconfig_gen.__version__` 与
+当前版本 `2.1.1`（`pyproject.toml`、`devconfig_gen.__version__` 与
 `devconfig-gen --version` 保持一致）。

@@ -141,4 +141,5 @@ adapter suite                          server / client / links 产物
 `devconfig_gen` 引擎与 Provider 不执行部署、远端仓库操作、服务管理、凭据
 存储，也不自动迁移机器状态。这些关注点属于独立的 `singbox_ops` 包——它是
 引擎的**消费者**：组装 context、调用纯函数流水线、通过 adapter 执行副作用。
-本仓库不提供终端向导与 Web 工作台。
+终端向导（`devconfig-gen init`）与本地 Web 工作台（`devconfig-gen ui`）同样是
+纯函数流水线上的薄客户端，不给引擎引入副作用。
