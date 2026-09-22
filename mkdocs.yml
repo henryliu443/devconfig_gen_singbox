@@ -51,6 +51,8 @@ nav:
       - 输入合并与覆盖: input-and-merge.md
       - 格式支持与产物: formats.md
       - 校验与诊断: validation.md
+      - 终端向导: wizard.md
+      - Web 工作台: web-ui.md
   - 扩展:
       - Provider 参考与开发: providers.md
       - Python API: python-api.md

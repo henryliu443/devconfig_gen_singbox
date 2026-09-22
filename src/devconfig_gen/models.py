@@ -120,10 +120,11 @@ class ConfigProvider(Protocol):
     """Structural contract every provider implements.
 
     ``validate`` returns rendered messages. Providers may additionally
-    implement ``diagnose`` (structured ``Diagnostic`` values) and
-    ``describe_schema`` / ``steps`` (declarative field metadata). Metadata
-    methods are optional, so a minimal provider only needs ``name``,
-    ``validate``, and ``generate``.
+    implement ``diagnose`` (structured ``Diagnostic`` values),
+    ``describe_schema`` / ``steps`` (declarative field metadata), and
+    ``web_ui_widgets`` (see :class:`WebUIWidgets`). Metadata methods are
+    optional, so a minimal provider only needs ``name``, ``validate``, and
+    ``generate``.
     """
 
     name: str
@@ -132,4 +133,24 @@ class ConfigProvider(Protocol):
         ...
 
     def validate(self, request: GenerationRequest) -> Sequence[str]:
+        ...
+
+
+class WebUIWidgets(Protocol):
+    """Optional provider capability: field types rendered by custom widgets.
+
+    A provider that wants the WebUI to render a new (or existing) ``field.type``
+    with its own widget implements ``web_ui_widgets()`` returning a mapping of
+    ``field_type`` to a JavaScript factory source string. Each source string
+    must evaluate to a function ``(ctx) => HTMLElement`` where ``ctx`` exposes
+    the field, the target element, the current value, and helpers to persist
+    edits (see ``docs/web-ui.md`` for the full contract).
+
+    This is purely additive: providers that do not implement it are rendered
+    exactly as before, and the core never requires it. Widgets are loaded from
+    the same-origin ``/api/widgets`` endpoint only, and a widget that fails to
+    evaluate falls back to the built-in widget for that type.
+    """
+
+    def web_ui_widgets(self) -> Mapping[str, str]:
         ...

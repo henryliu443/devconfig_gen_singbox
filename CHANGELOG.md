@@ -6,6 +6,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-09-22
+
+### Added
+
+- **Interactive terminal wizard restored**: `devconfig-gen init`
+  (`interactive.py`). Ported from the parent repository; driven entirely by a
+  provider's declarative `steps` / `diagnose` metadata, so it works for
+  `singbox` and every built-in provider with no per-provider code.
+- **Local Web studio restored**: `devconfig-gen ui` (`web_ui.py`). Ported from
+  the parent repository; zero-build (stdlib `http.server`), live preview, split
+  editor, and export into a workspace root.
+- **`WebUIWidgets` protocol restored** (`devconfig_gen.models.WebUIWidgets`):
+  providers may implement the optional `web_ui_widgets()` hook, served over
+  `GET /api/widgets`, to render a field type with a custom widget. Purely
+  additive; providers without it render exactly as before.
+- `docs/wizard.md` and `docs/web-ui.md`, wired into the docs navigation.
+
 ## [2.1.0] - 2026-09-22
 
 ### Added
