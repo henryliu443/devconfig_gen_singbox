@@ -6,7 +6,7 @@ side effects.
 
 ## Repo relationship (父/子)
 
-- **This repo is the CHILD (子仓库 / fork):** `DevConfig-Gen_SingBox` — a private
+- **This repo is the CHILD (子仓库 / fork):** `devconfig_gen_singbox` — a private
   integration fork.
 - **Parent (父仓库 / upstream):** `DevConfig-Gen`
   (https://github.com/henryliu443/DevConfig-Gen) — owns the neutral core and the
@@ -46,3 +46,12 @@ Authority flows **parent → child → downstream**:
   formats, or provider contract changes.
 - Do not publish packages, create releases, or push to a remote repository
   unless explicitly asked.
+
+## graphify
+
+This project has a graphify knowledge graph at graphify-out/.
+
+Rules:
+- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
+- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
+- After modifying code files in this session, run `python3 -c "from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))"` to keep the graph current

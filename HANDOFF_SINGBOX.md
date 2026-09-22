@@ -1,6 +1,6 @@
 # HANDOFF — sing-box Provider 接入（给下一个 Agent）
 
-> 本文件是**可执行交接单**。执行对象：子仓库 `DevConfig-Gen_SingBox`
+> 本文件是**可执行交接单**。执行对象：子仓库 `devconfig_gen_singbox`
 > （本地路径 `/Users/henry/DevConfig-Gen_SingBox`）。
 > 详细需求见子仓库 `FUTURE_PLAN_SINGBOX.md`；本文件是它的执行入口与护栏。
 > 状态：父仓库侧已完成；**子仓库侧待执行**。
@@ -12,7 +12,7 @@
 | 项 | 值 |
 |---|---|
 | 父仓库（upstream） | `DevConfig-Gen` — https://github.com/henryliu443/DevConfig-Gen |
-| 子仓库（本任务） | `DevConfig-Gen_SingBox` — https://github.com/henryliu443/DevConfig-Gen_SingBox（私有） |
+| 子仓库（本任务） | `devconfig_gen_singbox` — https://github.com/henryliu443/DevConfig-Gen_SingBox（私有） |
 | 本地子仓库路径 | `/Users/henry/DevConfig-Gen_SingBox` |
 | 父仓库当前版本 | v1.1.0（已发布 PyPI / Release / Pages） |
 | 两仓库同起点 | `c2f097c` |
@@ -24,7 +24,7 @@
 ## 1. 仓库关系与执行顺序
 
 ```
-parent (DevConfig-Gen)  →  child (DevConfig-Gen_SingBox)  →  downstream (A-repo, 退役中)
+parent (DevConfig-Gen)  →  child (devconfig_gen_singbox)  →  downstream (A-repo, 退役中)
 ```
 
 - 父仓库拥有中立核心与标准；**领域 provider 只存在于子仓库**。

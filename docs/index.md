@@ -1,4 +1,4 @@
-# DevConfig-Gen_SingBox 文档
+# devconfig_gen_singbox 文档
 
 本仓库是父仓库 `DevConfig-Gen` 的**子仓库（child / fork）**：父仓库拥有中立的执行
 引擎与稳定的 Provider 契约，本仓库只在其之上承载 **sing-box 领域 Provider**
@@ -102,5 +102,5 @@ src/devconfig_gen/
 
 ## 版本
 
-当前版本 `2.0.0`（`pyproject.toml`、`devconfig_gen.__version__` 与
+当前版本 `2.1.0`（`pyproject.toml`、`devconfig_gen.__version__` 与
 `devconfig-gen --version` 保持一致）。

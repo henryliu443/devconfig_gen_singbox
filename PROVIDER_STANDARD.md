@@ -206,7 +206,7 @@ class VariantPlugin(Protocol):
 
 > `Automated-sing-box-json-generator` 已进入 **merged/decoupled → retired** 流程：
 > 它是**只读参考（reference only）**，**不是开发目标**。所有新开发在
-> parent（`DevConfig-Gen`）与其 child（`DevConfig-Gen_SingBox`）进行。
+> parent（`DevConfig-Gen`）与其 child（`devconfig_gen_singbox`）进行。
 
 > 本文件是 DevConfig-Gen 的自我约束。下游只需遵循 Context Schema 与产物契约，无需理解 plugin 内部实现。
 

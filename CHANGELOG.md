@@ -6,6 +6,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-09-22
+
+### Added
+
+- **`singbox_ops` deployment layer** (`src/singbox_ops/`): a sibling package
+  that owns every side effect the pure engine deliberately avoids. It exposes
+  the `singbox-ops` CLI (`context` / `deploy` / `redeploy` / `destroy`) and a
+  suite of pluggable adapters: Cloudflare DNS, acme.sh + Cloudflare DNS-01
+  certificates, sing-box/WARP package installation, systemd, nftables, the WARP
+  watchdog, optional local JSON state, artifact export, and secret generation
+  (sing-box subprocess with a pure-Python fallback). It calls
+  `devconfig_gen.engine.generate_pipeline("singbox", ...)` as a library and is
+  never registered as a `ConfigProvider`.
+- `examples/singbox-deploy.yaml` deployment plan sample.
+- 58 tests covering the ops layer, all side effects mocked.
+
 ### Changed
 
 - PyPI distribution name is now `devconfig_gen_singbox`. The child fork
@@ -44,7 +60,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - The README is repositioned around **bounded domain scopes**: it leads with the
-  `DevConfig-Gen_SingBox` child identity and the `singbox` domain (domain model,
+  `devconfig_gen_singbox` child identity and the `singbox` domain (domain model,
   validation, transformations, variants, share links), and demotes the inherited
   engine capabilities to an "Inherited DevConfig-Gen Engine" section. The parent
   owns the neutral engine and provider contract; the child owns the domain.

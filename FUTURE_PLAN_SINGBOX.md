@@ -14,7 +14,7 @@
 | 代号 | 仓库 | 角色 |
 |---|---|---|
 | **父仓库** | `DevConfig-Gen` | 铁标准/白皮书所在地；provider 框架先在父仓库落地 |
-| **本工程** | `DevConfig-Gen_SingBox` | 私有集成分支；singbox provider 在此实现 |
+| **本工程** | `devconfig_gen_singbox` | 私有集成分支；singbox provider 在此实现 |
 | **A 开头** | `Automated-sing-box-json-generator` | **即将合并/解耦并退役的旧上层；只读参考（reference only），不是开发目标** |
 
 **开发顺序（铁定）：父仓库 DevConfig-Gen 先开发 → 回到本工程 → 最后 A-repo 仅做解耦/退役处理。**
