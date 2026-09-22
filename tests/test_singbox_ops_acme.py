@@ -1,7 +1,9 @@
 import unittest
 
 from singbox_ops.adapters.acme.cloudflare_dns01 import CloudflareDNS01ACME
+from singbox_ops.adapters.acme.prune import plan_prune, prune_certs
 from singbox_ops.core.command import CommandResult
+from singbox_ops.core.exceptions import AdapterError
 from tests._ops_support import FakeRunner
 
 HOSTS = {"tuic": "c3d4.example.com", "hysteria2": "e5f6.example.com"}
@@ -60,6 +62,34 @@ class ACMETests(unittest.TestCase):
         result = acme.apply(HOSTS, ["tuic", "hysteria2"], dry_run=True)
         self.assertEqual(set(result), {"tuic", "hysteria2"})
         self.assertEqual(runner.commands, [])
+
+
+class PruneTests(unittest.TestCase):
+    def _runner(self, entries):
+        return FakeRunner(dirs={"/root/.acme.sh": entries})
+
+    def test_plan_keep_and_remove(self):
+        runner = self._runner(["a.example.com_ecc", "b.example.com_ecc", "ca", "account.conf"])
+        keep, remove = plan_prune(runner, "/root/.acme.sh", ["a.example.com"])
+        self.assertEqual(keep, ["a.example.com_ecc"])
+        self.assertEqual(remove, ["b.example.com_ecc"])
+
+    def test_refuses_empty_keep(self):
+        runner = self._runner(["a.example.com_ecc"])
+        with self.assertRaises(AdapterError):
+            plan_prune(runner, "/root/.acme.sh", [])
+
+    def test_dry_run_does_not_delete(self):
+        runner = self._runner(["a.example.com_ecc", "b.example.com_ecc"])
+        result = prune_certs(runner, "/root/.acme.sh", ["a.example.com"], dry_run=True)
+        self.assertEqual(result["remove"], ["b.example.com_ecc"])
+        self.assertEqual(runner.commands, [])
+
+    def test_apply_deletes_only_stale(self):
+        runner = self._runner(["a.example.com_ecc", "b.example.com_ecc"])
+        prune_certs(runner, "/root/.acme.sh", ["a.example.com"], dry_run=False)
+        runs = [cmd[1] for cmd in runner.commands if cmd[0] == "run"]
+        self.assertEqual(runs, [("rm", "-rf", "/root/.acme.sh/b.example.com_ecc")])
 
 
 if __name__ == "__main__":

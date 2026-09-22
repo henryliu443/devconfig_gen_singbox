@@ -40,12 +40,15 @@ class FakeRunner(RecordingRunner):
         files: Optional[Mapping[str, str]] = None,
         handler: Optional[CommandHandler] = None,
         links: Optional[Sequence[str]] = None,
+        dirs: Optional[Mapping[str, Sequence[str]]] = None,
     ):
         super().__init__(existing=existing)
         if files:
             self._files.update(dict(files))
         self.handler = handler
         self._links = set(str(item) for item in (links or ()))
+        for path, entries in (dirs or {}).items():
+            self._dirs[str(path)] = set(str(entry) for entry in entries)
 
     def islink(self, path) -> bool:
         return str(path) in self._links

@@ -33,6 +33,7 @@ SUBCOMMANDS = (
     ("deploy", "Deploy sing-box (interactive wizard when --plan is omitted)"),
     ("redeploy", "Regenerate credentials and redeploy"),
     ("destroy", "Tear down what a previous deploy created"),
+    ("certs", "Prune stale acme.sh certificate dirs (dry-run unless --apply)"),
 )
 
 
@@ -46,6 +47,14 @@ def add_subparsers(sub) -> None:
         command.add_argument("--protocols", help="Comma-separated protocols (skips that prompt)")
         if name == "plan":
             command.add_argument("--output", default="plan.yaml", help="Where to write the plan")
+        if name == "certs":
+            command.add_argument("--keep", required=True, help="Comma-separated hosts to keep")
+            command.add_argument("--acme-home", default="/root/.acme.sh", help="acme.sh home dir")
+            command.add_argument(
+                "--apply",
+                action="store_true",
+                help="Actually delete (default is a dry run)",
+            )
         if name == "context":
             command.add_argument("--format", choices=("json", "yaml"), help="Output format")
         if name in ("deploy", "redeploy", "destroy"):
@@ -142,6 +151,22 @@ def _detect_or_placeholder(plan) -> str:
 
 def _run(args) -> int:
     try:
+        if getattr(args, "command", None) == "certs":
+            from .adapters.acme.prune import DEFAULT_ACME_HOME, prune_certs
+            from .core.command import LocalCommandRunner, RecordingRunner
+
+            keep = [item for item in (getattr(args, "keep", "") or "").split(",") if item.strip()]
+            dry_run = not bool(getattr(args, "apply", False))
+            runner = RecordingRunner() if dry_run else LocalCommandRunner()
+            result = prune_certs(
+                runner,
+                acme_home=getattr(args, "acme_home", DEFAULT_ACME_HOME),
+                keep_hosts=keep,
+                dry_run=dry_run,
+            )
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+            return 0
+
         if getattr(args, "plan", None):
             plan = load_plan(args.plan)
         elif args.command == "destroy":

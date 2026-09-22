@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.4] - 2026-09-22
+
+### Added
+
+- `certs` subcommand: prune stale acme.sh certificate directories.
+  `devconfig_gen_singbox certs --keep host1,host2 [--acme-home DIR] [--apply]`.
+  Safe by design: it only ever touches `<acme-home>/<host>_ecc` directories,
+  refuses to run with an empty keep list, and is a **dry run unless `--apply`**
+  is given.
+
 ## [2.1.3] - 2026-09-22
 
 ### Changed

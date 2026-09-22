@@ -40,11 +40,11 @@ PYTHONPATH=src python3 -m devconfig_gen.cli --help
 ## 验证安装
 
 ```bash
-devconfig_gen_singbox --version   # devconfig_gen_singbox 2.1.3
+devconfig_gen_singbox --version   # devconfig_gen_singbox 2.1.4
 devconfig_gen_singbox providers      # 输出四行：custom、env、json、singbox
 ```
 
-当前版本为 **2.1.3**。使用面包括稳定的 **CLI**、**Python API**、**终端向导**
+当前版本为 **2.1.4**。使用面包括稳定的 **CLI**、**Python API**、**终端向导**
 （`devconfig_gen_singbox init`）与**本地 Web 工作台**（`devconfig_gen_singbox ui`），并在父仓库的
 中立核心之上新增 `singbox` 领域 Provider。
 

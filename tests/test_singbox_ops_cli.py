@@ -14,7 +14,7 @@ class SingleCliNameTests(unittest.TestCase):
         result = run_cli("--help")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("devconfig_gen_singbox", result.stdout)
-        for name in ("generate", "init", "ui", "context", "plan", "deploy", "redeploy", "destroy"):
+        for name in ("generate", "init", "ui", "context", "plan", "deploy", "redeploy", "destroy", "certs"):
             self.assertIn(name, result.stdout)
         self.assertNotIn("singbox-ops", result.stdout)
 
