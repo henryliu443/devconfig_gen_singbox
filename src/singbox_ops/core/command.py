@@ -55,6 +55,9 @@ class CommandRunner:
     def islink(self, path) -> bool:
         raise NotImplementedError
 
+    def listdir(self, path) -> List[str]:
+        raise NotImplementedError
+
     def mkdir(self, path, *, mode: Optional[int] = None) -> None:
         raise NotImplementedError
 
@@ -113,6 +116,9 @@ class LocalCommandRunner(CommandRunner):
     def islink(self, path) -> bool:
         return Path(path).is_symlink()
 
+    def listdir(self, path) -> List[str]:
+        return sorted(os.listdir(str(path)))
+
     def mkdir(self, path, *, mode: Optional[int] = None) -> None:
         target = Path(path)
         target.mkdir(parents=True, exist_ok=True)
@@ -149,6 +155,7 @@ class RecordingRunner(CommandRunner):
         self.links: List[Tuple[str, str]] = []
         self._existing = set(str(item) for item in (existing or ()))
         self._files = {}
+        self._dirs = {}
 
     def run(self, args: Sequence[str], *, check: bool = True, env=None) -> CommandResult:
         self.commands.append(("run", tuple(str(item) for item in args), dict(env or {})))
@@ -173,9 +180,13 @@ class RecordingRunner(CommandRunner):
     def islink(self, path) -> bool:
         return False
 
+    def listdir(self, path) -> List[str]:
+        return sorted(self._dirs.get(str(path), set()))
+
     def mkdir(self, path, *, mode: Optional[int] = None) -> None:
         self.directories.append((str(path), mode))
         self._existing.add(str(path))
+        self._dirs.setdefault(str(path), set())
 
     def unlink(self, path, *, missing_ok: bool = True) -> None:
         self.removed.append(str(path))
