@@ -6,6 +6,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.3] - 2026-09-22
+
+### Changed
+
+- Deployment **takeover** fixes for hosts previously managed by the legacy tool:
+  - `config.json` symlinks (the old `profiles/` scheme) are replaced with a real
+    single file instead of writing through the link.
+  - nftables now deletes the existing `inet singbox_guard` table before applying,
+    so chains cannot stack up and `destroy` cannot half-remove a foreign ruleset.
+  - `direct` / `none` tunnel mode cancels the WARP watchdog (removes the cron
+    entry and script) and stops `warp-svc`, instead of babysitting it forever.
+
+### Added
+
+- `auto-update` runtime adapter: installs the daily sing-box auto-update script
+  and its cron entry (copied from the legacy deployment).
+
 ## [2.1.2] - 2026-09-22
 
 ### Changed

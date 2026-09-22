@@ -56,6 +56,12 @@ class LocalFilesExport:
             destination = outputs.get(key)
             if not destination:
                 continue
+            # Single-file model: never write *through* a legacy symlink (for
+            # example config.json -> profiles/config.direct.json). Replace the
+            # link with a real file so the old profile-switching scheme cannot
+            # silently redirect our write.
+            if not dry_run and self.runner.islink(destination):
+                self.runner.unlink(destination)
             text = serialize_artifact(artifact)
             self.runner.write_text(destination, text, mode=0o600)
             written[key] = destination

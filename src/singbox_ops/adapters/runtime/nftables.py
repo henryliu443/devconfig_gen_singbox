@@ -90,6 +90,10 @@ class NftablesFirewall:
         ports = protocol_ports(plan.protocols)
         ssh_port = detect_ssh_port(self.runner)
         conf = build_nftables_conf(ports["tcp"], ports["udp"], ssh_port)
+        # Takeover: drop any previous table (legacy included) before applying
+        # ours, so chains never stack up and ``destroy`` cannot half-remove a
+        # foreign ruleset.
+        self.runner.run(["nft", "delete", "table", "inet", "singbox_guard"], check=False)
         self.runner.mkdir("/etc/nftables.d", mode=0o755)
         self.runner.write_text(self.conf_path, conf, mode=0o644)
         self.runner.run(["nft", "-f", self.conf_path], check=True)

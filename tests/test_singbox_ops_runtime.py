@@ -1,5 +1,6 @@
 import unittest
 
+from singbox_ops.adapters.runtime.auto_update import AutoUpdateRuntime
 from singbox_ops.adapters.runtime.nftables import (
     NftablesFirewall,
     build_nftables_conf,
@@ -44,10 +45,12 @@ class NftablesTests(unittest.TestCase):
     def test_detect_ssh_port_default(self):
         self.assertEqual(detect_ssh_port(FakeRunner()), 22)
 
-    def test_apply_writes_and_loads(self):
+    def test_apply_deletes_legacy_table_then_loads(self):
         runner = FakeRunner()
         NftablesFirewall(runner=runner).apply(plan_for(), {})
-        self.assertTrue(any(cmd[0] == "run" and cmd[1][0] == "nft" for cmd in runner.commands))
+        runs = [cmd[1] for cmd in runner.commands if cmd[0] == "run"]
+        self.assertIn(("nft", "delete", "table", "inet", "singbox_guard"), runs)
+        self.assertTrue(any(item[0] == "nft" and item[1] == "-f" for item in runs))
         self.assertTrue(runner.writes)
 
 
@@ -80,10 +83,33 @@ class WatchdogTests(unittest.TestCase):
         self.assertIn("/root/warp_lazy_watchdog.sh", paths)
         self.assertIn("/etc/cron.d/singbox-warp-watchdog", paths)
 
-    def test_skips_for_none_mode(self):
+    def test_direct_mode_cancels_watchdog_and_kills_warp(self):
         runner = FakeRunner()
         WarpWatchdogRuntime(runner=runner).apply(plan_for("none"), {})
         self.assertEqual(runner.writes, [])
+        self.assertIn("/etc/cron.d/singbox-warp-watchdog", runner.removed)
+        self.assertIn("/root/warp_lazy_watchdog.sh", runner.removed)
+        runs = [cmd[1] for cmd in runner.commands if cmd[0] == "run"]
+        self.assertIn(("pkill", "-9", "-x", "warp-svc"), runs)
+
+
+class AutoUpdateTests(unittest.TestCase):
+    def test_apply_writes_script_and_cron(self):
+        runner = FakeRunner()
+        AutoUpdateRuntime(runner=runner).apply(plan_for("none"), {})
+        paths = [path for path, _, _ in runner.writes]
+        self.assertIn("/usr/local/bin/singbox_auto_update.py", paths)
+        self.assertIn("/etc/cron.d/singbox-auto-update", paths)
+        cron = next(text for path, text, _ in runner.writes if path.endswith("singbox-auto-update"))
+        self.assertIn("17 4 * * *", cron)
+        script = next(text for path, text, _ in runner.writes if path.endswith("singbox_auto_update.py"))
+        self.assertIn("SagerNet/sing-box", script)
+
+    def test_destroy_removes_both(self):
+        runner = FakeRunner()
+        AutoUpdateRuntime(runner=runner).destroy(plan_for("none"), {})
+        self.assertIn("/etc/cron.d/singbox-auto-update", runner.removed)
+        self.assertIn("/usr/local/bin/singbox_auto_update.py", runner.removed)
 
 
 class PackagesTests(unittest.TestCase):

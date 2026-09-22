@@ -15,6 +15,7 @@ from devconfig_gen import formats
 from ..adapters.acme.cloudflare_dns01 import CloudflareDNS01ACME
 from ..adapters.dns.cloudflare import CloudflareDNS
 from ..adapters.export.local_files import LocalFilesExport
+from ..adapters.runtime.auto_update import AutoUpdateRuntime
 from ..adapters.runtime.nftables import NftablesFirewall
 from ..adapters.runtime.packages import DebianPackagesRuntime
 from ..adapters.runtime.systemd import SystemdRuntime
@@ -44,6 +45,7 @@ RUNTIME_FACTORIES = {
     "systemd": SystemdRuntime,
     "nftables-basic": NftablesFirewall,
     "warp": WarpWatchdogRuntime,
+    "auto-update": AutoUpdateRuntime,
 }
 STATE_FACTORIES = {"local-json": LocalJsonState}
 
@@ -59,6 +61,7 @@ class AdapterSuite:
     systemd: Optional[Any] = None
     firewall: Optional[Any] = None
     watchdog: Optional[Any] = None
+    auto_update: Optional[Any] = None
 
 
 @dataclass
@@ -126,6 +129,7 @@ def build_suite(plan: DeployPlan, runner: CommandRunner) -> AdapterSuite:
     systemd = _runtime(plan, "systemd", runtime_kwargs)
     firewall = _runtime(plan, "firewall", runtime_kwargs)
     watchdog = _runtime(plan, "watchdog", runtime_kwargs)
+    auto_update = _runtime(plan, "auto_update", runtime_kwargs)
 
     return AdapterSuite(
         secrets=secrets,
@@ -137,6 +141,7 @@ def build_suite(plan: DeployPlan, runner: CommandRunner) -> AdapterSuite:
         systemd=systemd,
         firewall=firewall,
         watchdog=watchdog,
+        auto_update=auto_update,
     )
 
 
@@ -204,6 +209,7 @@ def deploy(
         ("systemd", suite.systemd),
         ("firewall", suite.firewall),
         ("watchdog", suite.watchdog),
+        ("auto_update", suite.auto_update),
     ):
         if adapter is None:
             continue
@@ -257,6 +263,7 @@ def destroy(
 
     for key, adapter in (
         ("watchdog", suite.watchdog),
+        ("auto_update", suite.auto_update),
         ("firewall", suite.firewall),
         ("systemd", suite.systemd),
         ("packages", suite.packages),
