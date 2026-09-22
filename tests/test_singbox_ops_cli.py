@@ -28,7 +28,7 @@ class OpsCliTests(unittest.TestCase):
         self.assertEqual(len(context["network"]["protocols"]), 3)
 
     def test_deploy_dry_run_reports_steps(self):
-        result = run_ops_cli("deploy", "--plan", PLAN, "--dry-run")
+        result = run_ops_cli("deploy", "--plan", PLAN, "--dry-run", "--json")
         self.assertEqual(result.returncode, 0, result.stderr)
         report = json.loads(result.stdout)
         self.assertTrue(report["dry_run"])

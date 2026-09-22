@@ -6,6 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.6] - 2026-09-23
+
+### Added
+
+- Interactive wizard now **captures Cloudflare credentials** (`CF_Token` /
+  `CF_Zone_ID`) when DNS or ACME is enabled, and applies them in-process
+  (never written to disk). Fixes the `Cloudflare credentials missing` error
+  that appeared right after choosing to manage DNS.
+- **Coloured UI** (`singbox_ops.core.ui`): banner, sections, per-field help
+  text, and a pre-flight summary. Colours auto-disable on non-TTY / `NO_COLOR`.
+- **Confirmation** before a real run, and `--yes` to skip it.
+- **Live per-step progress** during `deploy` / `redeploy` / `destroy`.
+- `--json` on `deploy` / `redeploy` / `destroy` prints the machine-readable
+  report (real runs need `--yes`).
+
 ## [2.1.5] - 2026-09-22
 
 ### Fixed

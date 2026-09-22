@@ -169,28 +169,34 @@ def deploy(
     *,
     dry_run: bool = False,
     generate: Optional[Callable[..., Any]] = None,
+    progress: Optional[Callable[[str], None]] = None,
 ) -> DeployReport:
     """Run the full deployment sequence."""
 
     generate = generate or _default_generate
-    steps = []
+    steps: list = []
+
+    def note(step: str) -> None:
+        steps.append(step)
+        if progress is not None:
+            progress(step)
 
     generated = suite.secrets.generate(plan, dry_run=dry_run)
     prefixes = dict(generated.subdomain_prefixes)
     hosts = build_protocol_hosts(plan.domain_root, prefixes)
-    steps.append("secrets")
+    note("secrets")
 
     server_ip = _resolve_server_ip(plan, dry_run)
 
     record_ids = suite.dns.apply(hosts, server_ip, dry_run=dry_run)
-    steps.append("dns")
+    note("dns")
 
     certificates: dict = {}
     if suite.acme is not None and plan.tls_protocols():
         certificates = dict(
             suite.acme.apply(hosts, plan.tls_protocols(), dry_run=dry_run)
         )
-        steps.append("acme")
+        note("acme")
 
     context = build_context(
         plan,
@@ -199,10 +205,10 @@ def deploy(
         subdomain_prefixes=prefixes,
     )
     result = generate(plan, context)
-    steps.append("generate")
+    note("generate")
 
     written = dict(suite.export.write(result.artifacts, plan.outputs, dry_run=dry_run))
-    steps.append("export")
+    note("export")
 
     for key, adapter in (
         ("packages", suite.packages),
@@ -214,7 +220,7 @@ def deploy(
         if adapter is None:
             continue
         adapter.apply(plan, hosts, dry_run=dry_run)
-        steps.append(key)
+        note(key)
 
     if suite.state is not None:
         suite.state.save(
@@ -231,7 +237,7 @@ def deploy(
             },
             dry_run=dry_run,
         )
-        steps.append("state")
+        note("state")
 
     return DeployReport(
         action="deploy",
@@ -251,10 +257,16 @@ def destroy(
     suite: AdapterSuite,
     *,
     dry_run: bool = False,
+    progress: Optional[Callable[[str], None]] = None,
 ) -> DeployReport:
     """Tear down what :func:`deploy` created, in reverse order."""
 
-    steps = []
+    steps: list = []
+
+    def note(step: str) -> None:
+        steps.append(step)
+        if progress is not None:
+            progress(step)
     state = suite.state.load() if suite.state is not None else None
     state = state or {}
     record_ids = dict(state.get("dns_record_ids") or {})
@@ -271,11 +283,11 @@ def destroy(
         if adapter is None:
             continue
         adapter.destroy(plan, hosts, dry_run=dry_run)
-        steps.append(key)
+        note(key)
 
     if record_ids:
         suite.dns.destroy(record_ids, dry_run=dry_run)
-        steps.append("dns")
+        note("dns")
 
     return DeployReport(
         action="destroy",
