@@ -42,6 +42,16 @@ class ExportTests(unittest.TestCase):
         self.assertEqual(match_output_key("sing-box-links.txt"), "links")
         self.assertIsNone(match_output_key("unknown.txt"))
 
+    def test_replaces_symlink_destination(self):
+        runner = FakeRunner(links=["/etc/sing-box/config.json"])
+        artifacts = [
+            GeneratedArtifact("sing-box.server.json", {"a": 1}, "application/json"),
+        ]
+        LocalFilesExport(runner=runner).write(artifacts, {"server_config": "/etc/sing-box/config.json"})
+        # the legacy symlink is removed, then a real file is written
+        self.assertIn("/etc/sing-box/config.json", runner.removed)
+        self.assertTrue(any(path == "/etc/sing-box/config.json" for path, _, _ in runner.writes))
+
     def test_writes_artifacts(self):
         runner = FakeRunner()
         artifacts = [

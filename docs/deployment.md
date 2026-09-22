@@ -71,7 +71,8 @@ adapters:
     packages: debian            # null 可关闭
     systemd: systemd
     firewall: nftables-basic
-    watchdog: warp
+    watchdog: warp              # direct/none 时自动移除并停止 warp-svc
+    auto_update: auto-update    # 每日自动升级 sing-box
 
 outputs:
   server_config: /etc/sing-box/config.json

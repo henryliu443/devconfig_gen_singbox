@@ -103,5 +103,5 @@ src/devconfig_gen/
 
 ## 版本
 
-当前版本 `2.1.2`（`pyproject.toml`、`devconfig_gen.__version__` 与
+当前版本 `2.1.3`（`pyproject.toml`、`devconfig_gen.__version__` 与
 `devconfig_gen_singbox --version` 保持一致）。

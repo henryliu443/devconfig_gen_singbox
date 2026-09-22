@@ -62,11 +62,18 @@ class WarpWatchdogRuntime:
         self.cron_path = cron_path
 
     def apply(self, plan, hosts: Mapping[str, str], *, dry_run: bool = False) -> None:
-        if plan.tunnel_mode not in ("proxy", "tun"):
+        if plan.tunnel_mode in ("proxy", "tun"):
+            script = build_watchdog_script(plan.tunnel_mode)
+            self.runner.write_text(self.script_path, script, mode=0o755)
+            self.runner.write_text(self.cron_path, build_cron_entry(self.script_path), mode=0o644)
             return
-        script = build_watchdog_script(plan.tunnel_mode)
-        self.runner.write_text(self.script_path, script, mode=0o755)
-        self.runner.write_text(self.cron_path, build_cron_entry(self.script_path), mode=0o644)
+
+        # ``direct`` / ``none``: the server does not use WARP, so cancel the
+        # watchdog and stop the WARP daemon instead of babysitting it forever.
+        self.runner.unlink(self.cron_path, missing_ok=True)
+        self.runner.unlink(self.script_path, missing_ok=True)
+        self.runner.run(["pkill", "-9", "-x", "warp-svc"], check=False)
+        self.runner.run(["systemctl", "disable", "warp-svc"], check=False)
 
     def destroy(self, plan, hosts: Mapping[str, str], *, dry_run: bool = False) -> None:
         self.runner.unlink(self.cron_path, missing_ok=True)

@@ -120,6 +120,7 @@ def interactive_plan(domain=None, protocols=None, reader=None, writer=None) -> d
                 "systemd": "systemd" if use_runtime else None,
                 "firewall": "nftables-basic" if use_runtime else None,
                 "watchdog": "warp" if use_runtime else None,
+                "auto_update": "auto-update" if use_runtime else None,
             },
         },
         "outputs": {

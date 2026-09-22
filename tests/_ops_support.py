@@ -39,11 +39,16 @@ class FakeRunner(RecordingRunner):
         existing: Optional[Sequence[str]] = None,
         files: Optional[Mapping[str, str]] = None,
         handler: Optional[CommandHandler] = None,
+        links: Optional[Sequence[str]] = None,
     ):
         super().__init__(existing=existing)
         if files:
             self._files.update(dict(files))
         self.handler = handler
+        self._links = set(str(item) for item in (links or ()))
+
+    def islink(self, path) -> bool:
+        return str(path) in self._links
 
     def run(self, args, *, check=True, env=None):
         self.commands.append(("run", tuple(str(item) for item in args), dict(env or {})))

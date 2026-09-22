@@ -40,6 +40,7 @@ DEFAULT_ADAPTERS: Mapping[str, Any] = {
         "systemd": "systemd",
         "firewall": "nftables-basic",
         "watchdog": "warp",
+        "auto_update": "auto-update",
     },
 }
 
