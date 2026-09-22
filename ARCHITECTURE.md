@@ -118,6 +118,38 @@ while `Diagnostic.field` keeps the full dotted path for tooling.
   selects `embedded` or `custom` rules and may extend the embedded buckets via
   `custom_rules`.
 
+### Operations layer (`singbox_ops`)
+
+`src/singbox_ops/` is a **separate top-level package** that owns every side
+effect the engine deliberately avoids. It is not a provider and is not part of
+`devconfig_gen`'s import graph; it depends on `devconfig_gen`, never the other
+way around.
+
+```text
+singbox-ops CLI (context / deploy / redeploy / destroy)
+        |
+        v
+core.plan -> core.context_builder -> devconfig_gen.engine.generate_pipeline
+        |                                      |
+        v                                      v
+adapter suite                          pure server/client/links artifacts
+  secrets · dns · acme · state · export · runtime(packages/systemd/nftables/watchdog)
+```
+
+- **Isolation:** the pure package keeps its zero-side-effect contract. Adding a
+  deployment feature means adding an adapter, never touching the engine.
+- **Adapters are plain classes:** a name -> factory mapping (`SECRET_FACTORIES`,
+  `DNS_FACTORIES`, ...) instead of setuptools entry points, so there is exactly
+  one plugin system in the project (providers), not two competing ones.
+- **Injectable runner:** every adapter goes through a `CommandRunner`. `--dry-run`
+  swaps in a `RecordingRunner`, and tests never touch a real system.
+- **Explicit inputs:** secret generation lives here (the engine still receives
+  only explicit credentials); the provider context is assembled by
+  `core.context_builder`.
+- **Optional state:** `adapters/state/local_json.py` persists non-secret
+  deployment metadata (record IDs, prefixes, output paths) so `redeploy` /
+  `destroy` can reuse it; setting `adapters.state: null` makes a run stateless.
+
 ### Clients
 
 This repository ships only two clients, both thin: the **CLI** (`cli.py`, argument
@@ -148,6 +180,9 @@ not part of this child fork.
 
 ## Out of scope
 
-DevConfig-Gen does not perform deployment, remote repository operations,
-service management, credential storage, or automatic migration of machine
-state. This child fork does not ship an interactive wizard or a Web UI.
+The `devconfig_gen` engine and its providers do not perform deployment, remote
+repository operations, service management, credential storage, or automatic
+migration of machine state. Those concerns live in the separate `singbox_ops`
+package, which is a *consumer* of the engine: it assembles a context, calls the
+pure pipeline, and carries out side effects through adapters. This child fork
+does not ship an interactive wizard or a Web UI.

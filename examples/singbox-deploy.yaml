@@ -1,0 +1,28 @@
+# Example deployment plan for `singbox-ops`.
+# See docs/deployment.md for the full field reference.
+domain_root: example.com
+server_ip: auto                # auto-detect, or pin an explicit IPv4
+protocols: [anytls, tuic, hysteria2]
+tunnel_mode: proxy             # none | proxy | tun
+
+# Optional: pin subdomain prefixes (otherwise generated per deploy)
+# subdomain_prefixes:
+#   reality: a1b2c3d4
+#   tuic: e5f6a7b8
+#   hy2: c9d0e1f2
+
+adapters:
+  secrets: singbox-subprocess  # singbox-subprocess | python-secrets | static
+  dns: cloudflare
+  acme: cloudflare-dns01
+  state: local-json            # null disables state persistence
+  runtime:
+    packages: debian
+    systemd: systemd
+    firewall: nftables-basic
+    watchdog: warp
+
+outputs:
+  server_config: /etc/sing-box/config.json
+  client_config: /root/singbox-client.json
+  links: /root/singbox-links.txt

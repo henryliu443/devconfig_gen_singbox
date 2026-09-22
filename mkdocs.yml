@@ -1,4 +1,4 @@
-site_name: DevConfig-Gen
+site_name: devconfig_gen_singbox
 site_description: Provider 驱动的结构化配置生成与校验工具
 site_url: https://henryliu443.github.io/DevConfig-Gen/docs/
 repo_url: https://github.com/henryliu443/DevConfig-Gen
@@ -57,3 +57,4 @@ nav:
   - 项目:
       - 开发与测试: development.md
       - 架构总览: architecture.md
+      - 部署层（singbox-ops）: deployment.md

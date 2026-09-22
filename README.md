@@ -1,9 +1,9 @@
-# DevConfig-Gen_SingBox
+# devconfig_gen_singbox
 
 > **A sing-box domain implementation built on top of DevConfig-Gen.**
 > **构建在 `DevConfig-Gen` 之上的 sing-box 领域实现（child / fork）。**
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](CHANGELOG.md)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 ![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)
 ![Tests](https://img.shields.io/badge/tests-136%20passing-brightgreen.svg)
@@ -21,7 +21,7 @@ DevConfig-Gen
   中立引擎 · Provider 契约 · 执行流水线
         │
         ▼
-DevConfig-Gen_SingBox
+devconfig_gen_singbox
   sing-box 领域 · 校验 · 转换 · server/client 变体
         │
         ▼
@@ -126,7 +126,7 @@ DevConfig-Gen                         (父仓库 · 主)
 │  Provider 契约
 │  执行流水线
 │
-└── DevConfig-Gen_SingBox             (子仓库 · 兵)
+└── devconfig_gen_singbox             (子仓库 · 兵)
        │  sing-box 领域知识
        │  领域校验
        │  协议转换
@@ -216,6 +216,37 @@ devconfig-gen schema   --provider singbox
   CLI 与 Python API 两端都产出 byte-for-byte 一致的产物。
 - **零副作用**：Provider 不读环境变量、不写 state、不调子进程；凭据与子域前缀
   全部显式输入。
+
+## 部署层 / Operations Layer（`singbox-ops`）
+
+生成与部署被刻意分开：`devconfig_gen` 只做纯函数配置生成；同仓库的
+`singbox_ops` 包负责所有副作用（DNS、证书、安装、systemd、防火墙、watchdog），
+并通过**库调用**使用引擎，绝不注册为 provider。
+
+```bash
+pip install -e ".[yaml,ops]"
+
+# 只组装 context（无副作用，方便审阅）
+singbox-ops context --plan examples/singbox-deploy.yaml > context.yaml
+
+# 干跑：打印将执行的每一步，不碰系统
+singbox-ops deploy --plan examples/singbox-deploy.yaml --dry-run
+
+# 真实部署 / 反向清理
+singbox-ops deploy  --plan examples/singbox-deploy.yaml
+singbox-ops destroy --plan examples/singbox-deploy.yaml
+```
+
+- **适配器**：`secrets`（sing-box 子进程 + 纯 Python 兜底）、`dns`（Cloudflare）、
+  `acme`（acme.sh + Cloudflare DNS-01）、`state`（可选 local JSON）、
+  `export`（本地文件）、`runtime`（packages / systemd / nftables-basic / warp）。
+- **可注入 runner**：所有副作用走 `CommandRunner`；`--dry-run` 使用记录器，
+  测试全部 mock，不需要真实 VPS。
+- **零污染**：`singbox_ops` 与 `devconfig_gen` 命名空间隔离，
+  引擎的零副作用契约保持不变。
+
+详见 [`ARCHITECTURE.md`](ARCHITECTURE.md#operations-layer-singbox_ops) 与
+[`examples/singbox-deploy.yaml`](examples/singbox-deploy.yaml)。
 
 ## 继承自 DevConfig-Gen 的引擎 / Inherited DevConfig-Gen Engine
 
@@ -307,7 +338,7 @@ python3 scripts/smoke_rounds.py 8
 
 ## 仓库关系 / Repository Relationship
 
-- 本仓库是 **子仓库（child / fork）**：`DevConfig-Gen_SingBox`。
+- 本仓库是 **子仓库（child / fork）**：`devconfig_gen_singbox`。
 - **父仓库（parent / upstream）** 为
   [`DevConfig-Gen`](https://github.com/henryliu443/DevConfig-Gen)，拥有中立核心与
   [`PROVIDER_STANDARD.md`](PROVIDER_STANDARD.md)。

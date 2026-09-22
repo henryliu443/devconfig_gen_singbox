@@ -3,7 +3,7 @@
 ## 项目结构
 
 ```text
-DevConfig-Gen_SingBox/
+devconfig_gen_singbox/
 ├── src/devconfig_gen/          核心包（见 docs/index.md 模块地图）
 │   ├── providers/              custom / json / env 内置 Provider
 │   │   └── singbox/            sing-box 领域 Provider（本仓库新增）
@@ -75,7 +75,7 @@ python -m build            # 生成 dist/*.whl 与 dist/*.tar.gz
 - 版本同时出现在 `pyproject.toml` 与 `src/devconfig_gen/__init__.py` 的
   `__version__`；CLI `--version` 直接读取 `__version__`，因此发布时两处需
   保持一致（测试 `test_version_matches_package_version` 会校验 CLI 与包
-  版本一致）。当前版本为 `2.0.0`。
+  版本一致）。当前版本为 `2.1.0`。
 
 ## 文档站点（GitHub Pages）
 

@@ -1,0 +1,239 @@
+#!/usr/bin/env bash
+set -u
+
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+umask 022
+
+LOCK_FILE="/var/run/warp_watchdog.lock"
+FAIL_COUNT_FILE="/tmp/warp_fail_count"
+DISABLE_FLAG="/tmp/warp_disabled"
+STATUS_CACHE="/tmp/warp_status_cache.txt"
+WARP_HOOK="/usr/local/bin/warp-state-hook"
+
+WARP_TRACE_URL="https://www.cloudflare.com/cdn-cgi/trace"
+WARP_MODE="%%WARP_MODE%%"
+WARP_PROXY_HOST="127.0.0.1"
+WARP_PROXY_PORT="40000"
+WARP_PROXY="socks5h://${WARP_PROXY_HOST}:${WARP_PROXY_PORT}"
+
+DIRECT_CONNECT_TIMEOUT=4
+PROXY_CONNECT_TIMEOUT=5
+WARP_CHECK_TIMEOUT=10
+WARP_CLI_TIMEOUT=8
+
+DISABLE_AFTER_FAILS=2
+REREG_AFTER_FAILS=3
+
+DIRECT_TARGETS=(
+  "223.5.5.5:53"
+  "119.29.29.29:53"
+  "1.1.1.1:443"
+)
+
+mkdir -p "$(dirname "$LOCK_FILE")"
+exec 9>"$LOCK_FILE"
+flock -n 9 || exit 0
+
+log() {
+    :
+}
+
+tcp_connect() {
+    local host="$1"
+    local port="$2"
+    local timeout_sec="$3"
+    timeout "$timeout_sec" bash -lc "exec 3<>/dev/tcp/$host/$port" >/dev/null 2>&1
+}
+
+check_direct_net() {
+    local target host port
+    for target in "${DIRECT_TARGETS[@]}"; do
+        host="${target%%:*}"
+        port="${target##*:}"
+        if tcp_connect "$host" "$port" "$DIRECT_CONNECT_TIMEOUT"; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+check_daemon_hung() {
+    timeout "$WARP_CLI_TIMEOUT" warp-cli --accept-tos --no-ansi status >"$STATUS_CACHE" 2>&1
+    local rc=$?
+    [ "$rc" -eq 124 ]
+}
+
+%%WARP_CHECK_BLOCK%%
+
+touch_disable_flag() {
+    local reason="$1"
+    if [ ! -f "$DISABLE_FLAG" ]; then
+        printf '%s %s\n' "$(date '+%F %T')" "$reason" > "$DISABLE_FLAG"
+        log "[degrade] create $DISABLE_FLAG reason=$reason"
+        apply_state_hook disabled
+    fi
+}
+
+clear_disable_flag() {
+    if [ -f "$DISABLE_FLAG" ]; then
+        rm -f "$DISABLE_FLAG"
+        log "[degrade] remove $DISABLE_FLAG"
+        apply_state_hook enabled
+    fi
+}
+
+apply_state_hook() {
+    local state="$1"
+
+    if [ -x "$WARP_HOOK" ]; then
+        timeout 20 "$WARP_HOOK" "$state" "$DISABLE_FLAG" >/dev/null 2>&1 || true
+    fi
+
+    if [ -f /etc/sing-box/profiles/config.warp.json ] && [ -f /etc/sing-box/profiles/config.direct.json ]; then
+        if [ "$state" = "disabled" ]; then
+            ln -sfn /etc/sing-box/profiles/config.direct.json /etc/sing-box/config.json
+        else
+            ln -sfn /etc/sing-box/profiles/config.warp.json /etc/sing-box/config.json
+        fi
+        systemctl restart sing-box >/dev/null 2>&1 || true
+    fi
+}
+
+reset_fail_count() {
+    rm -f "$FAIL_COUNT_FILE"
+}
+
+read_fail_count() {
+    if [ -f "$FAIL_COUNT_FILE" ]; then
+        cat "$FAIL_COUNT_FILE"
+    else
+        echo 0
+    fi
+}
+
+write_fail_count() {
+    echo "$1" > "$FAIL_COUNT_FILE"
+}
+
+safe_warp_cli() {
+    timeout "$WARP_CLI_TIMEOUT" warp-cli --accept-tos --no-ansi "$@" >/dev/null 2>&1
+}
+
+safe_warp_cli_mode() {
+    safe_warp_cli mode "$1" || safe_warp_cli set-mode "$1"
+}
+
+safe_warp_cli_proxy_port() {
+    safe_warp_cli proxy port "$1" || safe_warp_cli set-proxy-port "$1"
+}
+
+safe_warp_cli_registration_new() {
+    safe_warp_cli registration new || safe_warp_cli register
+}
+
+safe_warp_cli_registration_delete() {
+    safe_warp_cli registration delete || safe_warp_cli delete
+}
+
+prepare_warp_runtime() {
+    if [ "$WARP_MODE" = "proxy" ]; then
+        safe_warp_cli_mode proxy || true
+        safe_warp_cli_proxy_port "$WARP_PROXY_PORT" || true
+    else
+        safe_warp_cli_mode warp || true
+    fi
+}
+
+recover_retry() {
+    log "[recover] stage=retry"
+    safe_warp_cli disconnect || true
+    sleep 2
+    safe_warp_cli connect || true
+    sleep 5
+}
+
+recover_restart() {
+    log "[recover] stage=restart"
+    pkill -9 -x warp-svc >/dev/null 2>&1 || true
+    sleep 1
+    systemctl reset-failed warp-svc >/dev/null 2>&1 || true
+    systemctl restart warp-svc >/dev/null 2>&1 || true
+    sleep 5
+    prepare_warp_runtime
+    safe_warp_cli connect || true
+    sleep 5
+}
+
+recover_reregister() {
+    log "[recover] stage=reregister"
+    pkill -9 -x warp-svc >/dev/null 2>&1 || true
+    sleep 1
+    systemctl reset-failed warp-svc >/dev/null 2>&1 || true
+    systemctl restart warp-svc >/dev/null 2>&1 || true
+    sleep 5
+    safe_warp_cli disconnect || true
+    safe_warp_cli_registration_delete || true
+    sleep 2
+    safe_warp_cli_registration_new || true
+    sleep 2
+    prepare_warp_runtime
+    safe_warp_cli connect || true
+    sleep 6
+}
+
+if ! check_direct_net; then
+    log "[skip] direct network failed, no WARP recovery"
+    exit 0
+fi
+
+daemon_hung=0
+if check_daemon_hung; then
+    daemon_hung=1
+fi
+
+if [ "$daemon_hung" -eq 0 ] && check_warp_data_plane; then
+    reset_fail_count
+    clear_disable_flag
+    log "[ok] direct=up warp=up"
+    exit 0
+fi
+
+fail_count=$(read_fail_count)
+fail_count=$((fail_count + 1))
+write_fail_count "$fail_count"
+
+if [ "$daemon_hung" -eq 1 ]; then
+    log "[fail] direct=up warp=down reason=daemon_hung fail_count=$fail_count"
+else
+    log "[fail] direct=up warp=down reason=data_plane fail_count=$fail_count"
+fi
+
+if [ "$fail_count" -ge "$DISABLE_AFTER_FAILS" ]; then
+    touch_disable_flag "warp_unhealthy_$fail_count"
+fi
+
+if [ "$daemon_hung" -eq 1 ]; then
+    recover_restart
+elif [ "$fail_count" -lt "$DISABLE_AFTER_FAILS" ]; then
+    recover_retry
+elif [ "$fail_count" -lt "$REREG_AFTER_FAILS" ]; then
+    recover_restart
+else
+    recover_reregister
+fi
+
+daemon_hung=0
+if check_daemon_hung; then
+    daemon_hung=1
+fi
+
+if [ "$daemon_hung" -eq 0 ] && check_warp_data_plane; then
+    reset_fail_count
+    clear_disable_flag
+    log "[recover] warp restored"
+    exit 0
+fi
+
+touch_disable_flag "warp_recovery_failed_$fail_count"
+log "[down] keep degraded state"
+exit 0

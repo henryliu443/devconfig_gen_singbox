@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Repeatable smoke harness for DevConfig-Gen_SingBox.
+"""Repeatable smoke harness for devconfig_gen_singbox.
 
 Each round verifies two independent things:
 

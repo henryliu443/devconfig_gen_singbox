@@ -101,6 +101,28 @@ providers/singbox/
 上游 sing-box 的字段变化只改对应 `plugins/<variant>.py`；`provider.py` /
 `schema.py` / `route.py` 与产物契约保持稳定，不做版本追逐。
 
+## 部署层（`singbox_ops/`）
+
+`src/singbox_ops/` 是**独立顶层包**，负责所有副作用，不进入 `devconfig_gen`
+的导入图。它通过库调用使用引擎：
+
+```text
+singbox-ops CLI（context / deploy / redeploy / destroy）
+        |
+        v
+core.plan -> core.context_builder -> devconfig_gen.engine.generate_pipeline
+        |                                      |
+        v                                      v
+adapter suite                          server / client / links 产物
+  secrets · dns · acme · state · export · runtime
+```
+
+- **隔离**：引擎保持零副作用；新增部署能力 = 新增 adapter，不动引擎。
+- **普通类适配器**：name → factory 字典，不用 entry points；全项目只有一套插件体系（Provider）。
+- **可注入 Runner**：`--dry-run` 与测试使用记录器，不碰真实系统。
+- **显式输入**：凭据由部署层生成，但引擎仍只收到显式 context。
+- **可选 state**：只持久化非敏感元数据（记录 ID、前缀、输出路径）。
+
 ## 设计决策摘要
 
 1. `models.py` 是唯一稳定的核心数据契约；
@@ -112,9 +134,11 @@ providers/singbox/
    Provider 只需 `name`、`validate`、`generate`；
 7. 序列化确定：JSON/YAML 保留插入顺序；
 8. 核心引擎不包含远程操作、系统修改、凭据处理或部署；唯一的文件写入是
-   显式的 `output_dir`。
+   显式的 `output_dir`。这些副作用集中在独立的 `singbox_ops` 包中。
 
 ## 范围之外
 
-DevConfig-Gen 不执行部署、远端仓库操作、服务管理、凭据存储，也不自动迁移
-机器状态；本仓库不提供终端向导与 Web 工作台。
+`devconfig_gen` 引擎与 Provider 不执行部署、远端仓库操作、服务管理、凭据
+存储，也不自动迁移机器状态。这些关注点属于独立的 `singbox_ops` 包——它是
+引擎的**消费者**：组装 context、调用纯函数流水线、通过 adapter 执行副作用。
+本仓库不提供终端向导与 Web 工作台。
