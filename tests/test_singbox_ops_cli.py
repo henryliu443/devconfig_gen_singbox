@@ -2,8 +2,21 @@ import json
 import unittest
 
 from tests._ops_support import EXAMPLES, run_ops_cli
+from tests._support import run_cli
 
 PLAN = str(EXAMPLES / "singbox-deploy.yaml")
+
+
+class SingleCliNameTests(unittest.TestCase):
+    """There is exactly one command, named after the PyPI distribution."""
+
+    def test_ops_subcommands_are_grafted_onto_the_single_cli(self):
+        result = run_cli("--help")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("devconfig_gen_singbox", result.stdout)
+        for name in ("generate", "init", "ui", "context", "plan", "deploy", "redeploy", "destroy"):
+            self.assertIn(name, result.stdout)
+        self.assertNotIn("singbox-ops", result.stdout)
 
 
 class OpsCliTests(unittest.TestCase):

@@ -3,7 +3,7 @@
 > **A sing-box domain implementation built on top of DevConfig-Gen.**
 > **构建在 `DevConfig-Gen` 之上的 sing-box 领域实现（child / fork）。**
 
-[![Version](https://img.shields.io/badge/version-2.1.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.1.2-blue.svg)](CHANGELOG.md)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 ![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)
 ![Tests](https://img.shields.io/badge/tests-136%20passing-brightgreen.svg)
@@ -37,7 +37,7 @@ devconfig_gen_singbox
 git clone https://github.com/henryliu443/devconfig_gen_singbox.git
 cd devconfig_gen_singbox
 pip install -e ".[yaml]"
-devconfig-gen generate --provider singbox --input examples/singbox.yaml --output-dir dist
+devconfig_gen_singbox generate --provider singbox --input examples/singbox.yaml --output-dir dist
 ```
 
 未安装时亦可直接通过源码运行：
@@ -201,9 +201,9 @@ options:
 ## 输入示例 / Input Example
 
 ```bash
-devconfig-gen generate --provider singbox --input examples/singbox.yaml --output-dir dist
-devconfig-gen validate --provider singbox --input examples/singbox.yaml
-devconfig-gen schema   --provider singbox
+devconfig_gen_singbox generate --provider singbox --input examples/singbox.yaml --output-dir dist
+devconfig_gen_singbox validate --provider singbox --input examples/singbox.yaml
+devconfig_gen_singbox schema   --provider singbox
 ```
 
 完整 context 见 [`examples/singbox.yaml`](examples/singbox.yaml)。
@@ -256,14 +256,14 @@ singbox-ops destroy --plan examples/singbox-deploy.yaml
 - 结构化校验与诊断（`Diagnostic` / `ValidationError`）
 - JSON/YAML 序列化（标准库 + 可选 PyYAML，内置子集解析器兜底）
 - 多源合并与 dotted-path 覆盖（`deep_merge`、`--set`）
-- CLI、**终端向导**（`devconfig-gen init`）、**本地 Web 工作台**
-  （`devconfig-gen ui`）与 Python API
+- CLI、**终端向导**（`devconfig_gen_singbox init`）、**本地 Web 工作台**
+  （`devconfig_gen_singbox ui`）与 Python API
 
 同时也继承中立的 Provider `custom` / `json` / `env`。本仓库在其之上新增领域
 Provider `singbox`：
 
 ```bash
-devconfig-gen providers
+devconfig_gen_singbox providers
 # custom / env / json / singbox
 ```
 
@@ -274,15 +274,15 @@ devconfig-gen providers
 
 ```bash
 # 生成 / 校验 / 查看 schema
-devconfig-gen generate --provider singbox --input examples/singbox.yaml --output-dir dist --format yaml
-devconfig-gen validate --provider singbox --input examples/singbox.yaml --json
-devconfig-gen schema   --provider singbox
+devconfig_gen_singbox generate --provider singbox --input examples/singbox.yaml --output-dir dist --format yaml
+devconfig_gen_singbox validate --provider singbox --input examples/singbox.yaml --json
+devconfig_gen_singbox schema   --provider singbox
 
 # 交互式终端向导（所有 provider 通用，含 singbox）
-devconfig-gen init --provider singbox --output-dir dist
+devconfig_gen_singbox init --provider singbox --output-dir dist
 
 # 本地 Web 工作台（零构建，标准库 http.server）
-devconfig-gen ui --port 8848
+devconfig_gen_singbox ui --port 8848
 ```
 
 ```python

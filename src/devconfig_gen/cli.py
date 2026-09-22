@@ -14,7 +14,7 @@ from .registry import default_registry
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="devconfig-gen",
+        prog="devconfig_gen_singbox",
         description="Generate and validate structured JSON/YAML configuration.",
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
@@ -100,7 +100,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ui_cmd.set_defaults(handler=_ui)
 
+    _register_ops_subparsers(sub)
+
     return parser
+
+
+def _register_ops_subparsers(sub) -> None:
+    """Graft the optional ``singbox_ops`` subcommands onto this single CLI.
+
+    ``singbox_ops`` is imported lazily, so importing ``devconfig_gen`` stays
+    side-effect free and the pure engine works even without the ops package.
+    """
+
+    try:
+        from singbox_ops.cli import add_subparsers
+    except Exception:  # pragma: no cover - ops layer is optional
+        return
+    add_subparsers(sub)
 
 
 def _list_providers(args) -> int:

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "devconfig_gen_singbox"
-version = "2.1.1"
+version = "2.1.2"
 authors = [
   { name = "henryliu443", email = "henryliu443@gmail.com" },
 ]
@@ -26,9 +26,8 @@ dev = ["build", "wheel", "PyYAML>=5.1", "cryptography>=3.4"]
 docs = ["mkdocs-material>=9.5,<10"]
 
 [project.scripts]
-devconfig-gen = "devconfig_gen.cli:main"
+# One command, named exactly after the PyPI distribution.
 devconfig_gen_singbox = "devconfig_gen.cli:main"
-singbox-ops = "singbox_ops.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

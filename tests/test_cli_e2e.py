@@ -15,7 +15,7 @@ class TestCliEndToEnd(unittest.TestCase):
     def test_version_matches_package_version(self):
         result = run_cli("--version")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.strip(), f"devconfig-gen {__version__}")
+        self.assertEqual(result.stdout.strip(), f"devconfig_gen_singbox {__version__}")
 
     def test_providers_lists_builtins(self):
         result = run_cli("providers")

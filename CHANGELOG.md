@@ -6,6 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-09-22
+
+### Changed
+
+- **Single CLI name**: the only console script is `devconfig_gen_singbox`
+  (exactly the PyPI distribution name). `devconfig-gen` and `singbox-ops` are
+  removed; the operations subcommands (`context` / `init` / `deploy` /
+  `redeploy` / `destroy`) are grafted onto that same command.
+- `deploy` / `redeploy` without `--plan` now start an **interactive wizard**
+  (A-repo style): prompts for domain, protocols, tunnel mode, server IP, and
+  the DNS / ACME / runtime switches, then deploys.
+- `init` writes a `plan.yaml` from the same wizard without deploying.
+- `singbox_ops`: `adapters.dns` may be `null` to skip the DNS step (DNS managed
+  elsewhere). `deploy`/`destroy` skip it cleanly.
+
 ## [2.1.1] - 2026-09-22
 
 ### Added

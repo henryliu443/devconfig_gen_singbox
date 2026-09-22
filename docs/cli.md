@@ -3,18 +3,18 @@
 CLI 是 DevConfig-Gen 的主要使用面。所有命令都是无状态、脚本友好的：输入由
 参数和文件决定，产物写到显式目录，结果通过退出码和可选的 JSON 输出表达。
 
-当前版本为 **2.1.1**；`devconfig-gen --version` 会打印包内
+当前版本为 **2.1.2**；`devconfig_gen_singbox --version` 会打印包内
 `devconfig_gen.__version__`，例如：
 
 ```text
-$ devconfig-gen --version
-devconfig-gen 2.1.1
+$ devconfig_gen_singbox --version
+devconfig_gen_singbox 2.1.2
 ```
 
 两种调用方式等价：
 
 ```bash
-devconfig-gen <command> [options]                    # 已安装
+devconfig_gen_singbox <command> [options]                    # 已安装
 PYTHONPATH=src python3 -m devconfig_gen.cli <command> [options]   # 源码运行
 ```
 
@@ -33,8 +33,8 @@ PYTHONPATH=src python3 -m devconfig_gen.cli <command> [options]   # 源码运行
 
 | 选项 | 说明 |
 | --- | --- |
-| `-h, --help` | 查看帮助；也可用于子命令（`devconfig-gen generate --help`） |
-| `--version` | 打印 `devconfig-gen <version>`（读取包内 `__version__`，当前为 `2.1.1`） |
+| `-h, --help` | 查看帮助；也可用于子命令（`devconfig_gen_singbox generate --help`） |
+| `--version` | 打印 `devconfig_gen_singbox <version>`（读取包内 `__version__`，当前为 `2.1.2`） |
 
 子命令是必填项：不带命令直接运行会由 argparse 报错并返回退出码 `2`。
 
@@ -51,8 +51,8 @@ PYTHONPATH=src python3 -m devconfig_gen.cli <command> [options]   # 源码运行
 脚本里可以直接用退出码做门禁：
 
 ```bash
-if devconfig-gen validate --provider custom --input configs/app.yaml; then
-  devconfig-gen generate --provider custom --input configs/app.yaml --output-dir dist
+if devconfig_gen_singbox validate --provider custom --input configs/app.yaml; then
+  devconfig_gen_singbox generate --provider custom --input configs/app.yaml --output-dir dist
 fi
 ```
 
@@ -72,15 +72,15 @@ error: artifact name escapes output directory: '../escape.json'
 
 两个命令提供 JSON 输出，适合被脚本或其他程序消费：
 
-- `devconfig-gen validate --json`：诊断数组（见 [validate](#validate)）；
-- `devconfig-gen schema --provider <name>`：步骤/字段元数据数组。
+- `devconfig_gen_singbox validate --json`：诊断数组（见 [validate](#validate)）；
+- `devconfig_gen_singbox schema --provider <name>`：步骤/字段元数据数组。
 
 ## providers
 
 列出所有已注册 Provider，按名称排序，每行一个：
 
 ```text
-$ devconfig-gen providers
+$ devconfig_gen_singbox providers
 custom
 env
 json
@@ -95,7 +95,7 @@ singbox
 可用于自动生成表单、文档或客户端。
 
 ```text
-usage: devconfig-gen schema [-h] [--provider PROVIDER]
+usage: devconfig_gen_singbox schema [-h] [--provider PROVIDER]
 ```
 
 | 参数 | 默认 | 说明 |
@@ -103,7 +103,7 @@ usage: devconfig-gen schema [-h] [--provider PROVIDER]
 | `--provider` | `json` | Provider 名称 |
 
 ```bash
-devconfig-gen schema --provider env
+devconfig_gen_singbox schema --provider env
 ```
 
 输出结构（字段顺序固定）：
@@ -138,7 +138,7 @@ devconfig-gen schema --provider env
 主命令：加载并合并输入，交给 Provider 校验和生成，把产物写入输出目录。
 
 ```text
-usage: devconfig-gen generate [-h] [--provider PROVIDER] --input INPUT
+usage: devconfig_gen_singbox generate [-h] [--provider PROVIDER] --input INPUT
                               --output-dir OUTPUT_DIR [--format {json,yaml}]
                               [--name NAME] [--set KEY=VALUE]
 ```
@@ -161,7 +161,7 @@ usage: devconfig-gen generate [-h] [--provider PROVIDER] --input INPUT
 2. `--set` 覆盖最后应用。
 
 ```bash
-devconfig-gen generate --provider custom \
+devconfig_gen_singbox generate --provider custom \
   --input configs/base.yaml \
   --input configs/prod.json \
   --set app.port=9090 \
@@ -246,36 +246,36 @@ generated dist/custom.yaml
 
 ```bash
 # 1. 最简：custom 透传
-devconfig-gen generate --provider custom --input examples/custom.yaml \
+devconfig_gen_singbox generate --provider custom --input examples/custom.yaml \
   --output-dir generated --format yaml
 
 # 2. 显式 JSON 输出
-devconfig-gen generate --provider custom --input examples/custom.json \
+devconfig_gen_singbox generate --provider custom --input examples/custom.json \
   --output-dir generated --format json
 
 # 3. 后缀决定格式
-devconfig-gen generate --provider custom --input examples/custom.yaml \
+devconfig_gen_singbox generate --provider custom --input examples/custom.yaml \
   --output-dir generated --name renamed.yaml
 
 # 4. 多输入分层 + 覆盖
-devconfig-gen generate --provider custom \
+devconfig_gen_singbox generate --provider custom \
   --input configs/base.yaml --input configs/prod.json \
   --set app.port=9090 --set app.environment=production \
   --output-dir dist --format yaml
 
 # 5. 生成 .env
-devconfig-gen generate --provider env --input examples/vars.yaml --output-dir dist
+devconfig_gen_singbox generate --provider env --input examples/vars.yaml --output-dir dist
 
 # 6. 自定义 .env 名称
-devconfig-gen generate --provider env --input examples/vars.yaml \
+devconfig_gen_singbox generate --provider env --input examples/vars.yaml \
   --output-dir dist --name .env.production
 
 # 7. 写入子目录
-devconfig-gen generate --provider custom --input examples/custom.yaml \
+devconfig_gen_singbox generate --provider custom --input examples/custom.yaml \
   --output-dir dist --name envs/prod/custom.yaml
 
 # 8. sing-box 领域 Provider（server / client / links）
-devconfig-gen generate --provider singbox --input examples/singbox.yaml \
+devconfig_gen_singbox generate --provider singbox --input examples/singbox.yaml \
   --output-dir dist --format yaml
 ```
 
@@ -284,7 +284,7 @@ devconfig-gen generate --provider singbox --input examples/singbox.yaml \
 只校验、不生成、不写文件。
 
 ```text
-usage: devconfig-gen validate [-h] [--provider PROVIDER] --input INPUT
+usage: devconfig_gen_singbox validate [-h] [--provider PROVIDER] --input INPUT
                               [--format {json,yaml}] [--set KEY=VALUE]
                               [--json]
 ```
@@ -305,16 +305,16 @@ usage: devconfig-gen validate [-h] [--provider PROVIDER] --input INPUT
 - 加载/解析/未知 Provider：stderr `error: ...`，退出码 `2`。
 
 ```bash
-$ devconfig-gen validate --provider custom --input examples/custom.yaml
+$ devconfig_gen_singbox validate --provider custom --input examples/custom.yaml
 examples/custom.yaml: valid
 
-$ devconfig-gen validate --provider env --input broken.yaml
+$ devconfig_gen_singbox validate --provider env --input broken.yaml
 invalid: variables must not be empty        # stderr，退出码 1
 
-$ devconfig-gen validate --provider custom --input examples/custom.yaml --json
+$ devconfig_gen_singbox validate --provider custom --input examples/custom.yaml --json
 []                                          # 通过时也是合法 JSON
 
-$ devconfig-gen validate --provider env --input broken.yaml --json
+$ devconfig_gen_singbox validate --provider env --input broken.yaml --json
 [
   {
     "field": "variables",
@@ -334,7 +334,7 @@ variables: {}
 `Diagnostic.as_dict()`），适合配合 `jq`：
 
 ```bash
-devconfig-gen validate --provider env --input broken.yaml --json \
+devconfig_gen_singbox validate --provider env --input broken.yaml --json \
   | jq -r '.[] | "\(.field): \(.message)"'
 ```
 
@@ -342,7 +342,7 @@ devconfig-gen validate --provider env --input broken.yaml --json \
 
 ```bash
 printf 'app:\n  port: 1234\n' > config.txt
-devconfig-gen validate --provider custom --input config.txt --format yaml
+devconfig_gen_singbox validate --provider custom --input config.txt --format yaml
 ```
 
 ## 脚本化与自动化
@@ -358,13 +358,13 @@ CLI 面向脚本设计的三个契约：
 set -euo pipefail
 
 # 1) 先用 schema 确认 Provider 字段
-devconfig-gen schema --provider env > /tmp/env-schema.json
+devconfig_gen_singbox schema --provider env > /tmp/env-schema.json
 
 # 2) 校验所有输入，失败即退出（退出码 1 会被 set -e 捕获）
-devconfig-gen validate --provider env --input configs/vars.yaml
+devconfig_gen_singbox validate --provider env --input configs/vars.yaml
 
 # 3) 生成到输出目录
-devconfig-gen generate --provider env --input configs/vars.yaml \
+devconfig_gen_singbox generate --provider env --input configs/vars.yaml \
   --output-dir dist --name .env.production
 ```
 
