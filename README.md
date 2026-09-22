@@ -3,7 +3,7 @@
 > **A sing-box domain implementation built on top of DevConfig-Gen.**
 > **构建在 `DevConfig-Gen` 之上的 sing-box 领域实现（child / fork）。**
 
-[![Version](https://img.shields.io/badge/version-2.1.5-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.1.6-blue.svg)](CHANGELOG.md)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 ![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue.svg)
 ![Tests](https://img.shields.io/badge/tests-136%20passing-brightgreen.svg)
