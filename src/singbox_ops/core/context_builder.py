@@ -12,19 +12,24 @@ from .exceptions import AdapterError
 from .plan import DeployPlan
 from .protocols import (
     CERT_PATHS,
+    DEFAULT_ANYTLS_DECOY_PORT,
+    DEFAULT_ANYTLS_DECOY_SERVER,
+    DEFAULT_HY2_CLIENT_DOWN_MBPS,
+    DEFAULT_HY2_CLIENT_UP_MBPS,
+    DEFAULT_HY2_MASQUERADE,
+    DEFAULT_HY2_SERVER_DOWN_MBPS,
+    DEFAULT_HY2_SERVER_UP_MBPS,
     HOST_KEYS,
     PROTOCOL_PORTS,
     TLS_PROTOCOLS,
     requires_tls,
 )
 
-DEFAULT_ANYTLS_DECOY_SERVER = "www.cloudflare.com"
-DEFAULT_ANYTLS_DECOY_PORT = 443
-DEFAULT_MASQUERADE = "https://www.cloudflare.com"
-DEFAULT_SERVER_UP_MBPS = 500
-DEFAULT_SERVER_DOWN_MBPS = 500
-DEFAULT_CLIENT_UP_MBPS = 50
-DEFAULT_CLIENT_DOWN_MBPS = 200
+DEFAULT_MASQUERADE = DEFAULT_HY2_MASQUERADE
+DEFAULT_SERVER_UP_MBPS = DEFAULT_HY2_SERVER_UP_MBPS
+DEFAULT_SERVER_DOWN_MBPS = DEFAULT_HY2_SERVER_DOWN_MBPS
+DEFAULT_CLIENT_UP_MBPS = DEFAULT_HY2_CLIENT_UP_MBPS
+DEFAULT_CLIENT_DOWN_MBPS = DEFAULT_HY2_CLIENT_DOWN_MBPS
 
 
 def _require(secrets: Mapping[str, Any], path: str, context_name: str) -> Any:
@@ -59,7 +64,8 @@ def build_context(
     protocols = []
     for protocol in plan.protocols:
         credentials = secrets.get(protocol) or {}
-        entry = _build_protocol(protocol, credentials, prefixes, cert_paths)
+        params = dict(plan.protocol_params.get(protocol) or {})
+        entry = _build_protocol(protocol, credentials, prefixes, cert_paths, params)
         protocols.append(entry)
 
     client = {"fingerprint": plan.fingerprint}
@@ -97,7 +103,9 @@ def _build_protocol(
     credentials: Mapping[str, Any],
     prefixes: Mapping[str, str],
     cert_paths: Optional[Mapping[str, str]],
+    params: Optional[Mapping[str, Any]] = None,
 ) -> dict:
+    params = params or {}
     host_key = HOST_KEYS[protocol]
     if host_key not in prefixes:
         raise AdapterError(f"subdomain prefix for {host_key!r} is required ({protocol})")
@@ -111,8 +119,11 @@ def _build_protocol(
     if protocol == "anytls":
         entry["auth"] = {"password": _require(credentials, "password", protocol)}
         entry["reality"] = {
-            "decoy_server": credentials.get("decoy_server", DEFAULT_ANYTLS_DECOY_SERVER),
-            "decoy_port": int(credentials.get("decoy_port", DEFAULT_ANYTLS_DECOY_PORT)),
+            "decoy_server": params.get("decoy_server")
+            or credentials.get("decoy_server", DEFAULT_ANYTLS_DECOY_SERVER),
+            "decoy_port": int(
+                params.get("decoy_port") or credentials.get("decoy_port", DEFAULT_ANYTLS_DECOY_PORT)
+            ),
             "private_key": _require(credentials, "private_key", protocol),
             "public_key": _require(credentials, "public_key", protocol),
             "short_id": _require(credentials, "short_id", protocol),
@@ -130,10 +141,14 @@ def _build_protocol(
             "obfs_password": _require(credentials, "obfs_password", protocol),
         }
         entry["bandwidth"] = {
-            "up_mbps": int(credentials.get("up_mbps", DEFAULT_SERVER_UP_MBPS)),
-            "down_mbps": int(credentials.get("down_mbps", DEFAULT_SERVER_DOWN_MBPS)),
+            "up_mbps": int(params.get("up_mbps") or credentials.get("up_mbps", DEFAULT_SERVER_UP_MBPS)),
+            "down_mbps": int(
+                params.get("down_mbps") or credentials.get("down_mbps", DEFAULT_SERVER_DOWN_MBPS)
+            ),
         }
-        entry["masquerade"] = credentials.get("masquerade", DEFAULT_MASQUERADE)
+        entry["masquerade"] = (
+            params.get("masquerade") or credentials.get("masquerade", DEFAULT_MASQUERADE)
+        )
         cert, key = _resolve_cert(protocol, cert_paths)
         entry["tls"] = {"cert_path": cert, "key_path": key}
     else:  # pragma: no cover - guarded by DeployPlan validation

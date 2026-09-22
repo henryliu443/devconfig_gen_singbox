@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.8] - 2026-09-23
+
+### Added
+
+- **Protocol parameters are first-class** (they were previously forced to the
+  defaults, silently dropping existing values):
+  - `protocol_params.anytls.decoy_server` / `decoy_port` (REALITY decoy; the
+    certificate SNI uses the same value)
+  - `protocol_params.hysteria2.masquerade`, `up_mbps`, `down_mbps`
+  - The interactive wizard now asks for the decoy site and the masquerade URL,
+    and the pre-flight summary shows them.
+
 ## [2.1.7] - 2026-09-23
 
 ### Added

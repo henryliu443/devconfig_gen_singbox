@@ -36,6 +36,17 @@ DEFAULT_FINGERPRINT = "chrome"
 DEFAULT_TUNNEL_MODE = "proxy"
 DEFAULT_FORMAT = "json"
 
+# Single source of truth for protocol-level defaults. Anything that wants a
+# fallback (context builder, wizard prompts, docs) reads these, so nothing is
+# hard-coded in more than one place and operators can reason about one value.
+DEFAULT_ANYTLS_DECOY_SERVER = "www.cloudflare.com"
+DEFAULT_ANYTLS_DECOY_PORT = 443
+DEFAULT_HY2_MASQUERADE = "https://www.cloudflare.com"
+DEFAULT_HY2_SERVER_UP_MBPS = 500
+DEFAULT_HY2_SERVER_DOWN_MBPS = 500
+DEFAULT_HY2_CLIENT_UP_MBPS = 50
+DEFAULT_HY2_CLIENT_DOWN_MBPS = 200
+
 #: TCP / UDP classification, used for firewall rules.
 UDP_PROTOCOLS: Tuple[str, ...] = ("tuic", "hysteria2")
 
