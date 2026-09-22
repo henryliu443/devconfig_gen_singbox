@@ -44,7 +44,7 @@ deep_merge({"a": [1]}, {"a": [2, 3]})   # {"a": [2, 3]}
 点路径覆盖在合并之后应用，用来做命令行级别的最终定值：
 
 ```bash
-devconfig-gen generate --provider custom \
+devconfig_gen_singbox generate --provider custom \
   --input configs/base.yaml \
   --input configs/prod.json \
   --set app.port=9090 \

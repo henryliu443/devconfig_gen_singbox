@@ -1,12 +1,12 @@
 # Web 工作台与 HTTP API（ui）
 
-`devconfig-gen ui` 启动一个零构建、零前端依赖的本地单页应用：HTML/CSS/JS
+`devconfig_gen_singbox ui` 启动一个零构建、零前端依赖的本地单页应用：HTML/CSS/JS
 全部内嵌在 `src/devconfig_gen/web_ui.py` 中，由 Python 标准库
 `ThreadingHTTPServer` 提供，不需要 npm / node_modules。
 
 ```bash
-devconfig-gen ui
-devconfig-gen ui --host 127.0.0.1 --port 8848 --workspace ~/projects/my-app --no-browser
+devconfig_gen_singbox ui
+devconfig_gen_singbox ui --host 127.0.0.1 --port 8848 --workspace ~/projects/my-app --no-browser
 ```
 
 | 参数 | 默认 | 说明 |

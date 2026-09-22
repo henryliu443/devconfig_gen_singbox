@@ -4,7 +4,7 @@ Provider 是 DevConfig-Gen 的扩展点：它决定输入如何被校验、规�
 引擎本身不包含任何领域逻辑，只通过注册表调用 Provider。
 
 本仓库是父仓库 `DevConfig-Gen` 的子仓库，使用面只有 **CLI** 与 **Python API**；
-Provider 元数据用于 `devconfig-gen schema` 与任何第三方客户端。
+Provider 元数据用于 `devconfig_gen_singbox schema` 与任何第三方客户端。
 
 ## Provider 契约
 
@@ -189,7 +189,7 @@ result = generate("upper", GenerationRequest(context={"a": 1}), registry=registr
 
 ## 元数据驱动的 CLI
 
-- `devconfig-gen schema --provider <name>` 打印
+- `devconfig_gen_singbox schema --provider <name>` 打印
   `[step.as_dict() for step in describe_provider(name)]`；
 - 新增 Provider 后无需修改 CLI：注册到 `default_registry`（或传入自定义
   `registry`）即可被识别。

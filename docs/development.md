@@ -69,13 +69,13 @@ python -m build            # 生成 dist/*.whl 与 dist/*.tar.gz
 ```
 
 - 包名：`devconfig_gen_singbox`，导入名：`devconfig_gen`；
-- 控制台脚本：`devconfig-gen = devconfig_gen.cli:main`；
+- 控制台脚本：`devconfig_gen_singbox = devconfig_gen.cli:main`；
 - 运行时依赖为空；可选依赖 `yaml`（PyYAML）、`dev`（构建工具）与
   `docs`（`mkdocs-material`）；
 - 版本同时出现在 `pyproject.toml` 与 `src/devconfig_gen/__init__.py` 的
   `__version__`；CLI `--version` 直接读取 `__version__`，因此发布时两处需
   保持一致（测试 `test_version_matches_package_version` 会校验 CLI 与包
-  版本一致）。当前版本为 `2.1.1`。
+  版本一致）。当前版本为 `2.1.2`。
 
 ## 文档站点（GitHub Pages）
 
@@ -146,5 +146,5 @@ Trusted Publishing（OIDC）发布。发布操作只在 CI 中执行；本地开
   （`providers.md`、`formats.md`、`input-and-merge.md`）；
 - 架构或设计决策变化时更新根目录 `ARCHITECTURE.md`，并同步
   `docs/architecture.md` 的摘要；
-- `docs/cli.md` 的命令/参数应与 `devconfig-gen <command> --help` 保持一致，
+- `docs/cli.md` 的命令/参数应与 `devconfig_gen_singbox <command> --help` 保持一致，
   可直接用该命令核对。

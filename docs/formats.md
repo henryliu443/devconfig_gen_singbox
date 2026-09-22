@@ -120,15 +120,15 @@ YAML 由两层实现支撑：
 
 ```bash
 # 显式格式
-devconfig-gen generate --provider custom --input examples/custom.yaml \
+devconfig_gen_singbox generate --provider custom --input examples/custom.yaml \
   --output-dir out --format json        # out/custom.json
 
 # 由文件名推断格式
-devconfig-gen generate --provider custom --input examples/custom.yaml \
+devconfig_gen_singbox generate --provider custom --input examples/custom.yaml \
   --output-dir out --name renamed.yaml  # out/renamed.yaml（YAML 内容）
 
 # 显式格式优先于文件名
-devconfig-gen generate --provider custom --input examples/custom.yaml \
+devconfig_gen_singbox generate --provider custom --input examples/custom.yaml \
   --output-dir out --format json --name renamed.yaml
 # out/renamed.yaml，但内容是 JSON
 ```

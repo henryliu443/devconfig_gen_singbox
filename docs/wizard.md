@@ -1,11 +1,11 @@
 # 交互式终端向导（init）
 
-`devconfig-gen init` 提供纯终端的引导式配置流程，适合无头服务器、SSH 会话
+`devconfig_gen_singbox init` 提供纯终端的引导式配置流程，适合无头服务器、SSH 会话
 或终端优先的工作流。它完全由 Provider 的声明式 `steps` 驱动，不包含任何
 生成逻辑，也不依赖 Web 工作台或浏览器。
 
 ```text
-usage: devconfig-gen init [-h] [--provider PROVIDER] [--input INPUT]
+usage: devconfig_gen_singbox init [-h] [--provider PROVIDER] [--input INPUT]
                           [--output-dir OUTPUT_DIR] [--format {json,yaml}]
 ```
 
@@ -53,7 +53,7 @@ usage: devconfig-gen init [-h] [--provider PROVIDER] [--input INPUT]
 ## 示例会话
 
 ```text
-$ devconfig-gen init --provider custom --output-dir generated
+$ devconfig_gen_singbox init --provider custom --output-dir generated
 ========================================================
   DevConfig-Gen Interactive Wizard: 'custom'
   Answer the prompts below. Press Enter to use defaults.

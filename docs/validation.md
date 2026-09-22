@@ -46,7 +46,7 @@ diagnose_request("env", context={})    # (Diagnostic(field="variables", ...),)
 ## CLI 行为
 
 ```bash
-devconfig-gen validate --provider env --input broken.yaml
+devconfig_gen_singbox validate --provider env --input broken.yaml
 # stderr: invalid: variables must not be empty
 # 退出码 1
 ```

@@ -1,13 +1,13 @@
 # CLI 配方
 
 面向脚本和自动化的可复制命令。以下配方在 macOS/Linux 的 `bash`/`zsh` 下
-验证通过；源码运行时把 `devconfig-gen` 换成
+验证通过；源码运行时把 `devconfig_gen_singbox` 换成
 `PYTHONPATH=src python3 -m devconfig_gen.cli` 即可。
 
 ## 分层配置：base + 环境覆盖
 
 ```bash
-devconfig-gen generate --provider custom \
+devconfig_gen_singbox generate --provider custom \
   --input configs/base.yaml \
   --input configs/prod.yaml \
   --output-dir dist --format yaml
@@ -43,7 +43,7 @@ app:
 `--input` 可混用格式，格式按扩展名与内容独立检测：
 
 ```bash
-devconfig-gen generate --provider custom \
+devconfig_gen_singbox generate --provider custom \
   --input configs/base.yaml \
   --input configs/prod.json \
   --output-dir dist --name merged.yaml
@@ -53,7 +53,7 @@ devconfig-gen generate --provider custom \
 
 ```bash
 for env in dev staging prod; do
-  devconfig-gen generate --provider custom \
+  devconfig_gen_singbox generate --provider custom \
     --input configs/base.yaml \
     --set app.environment=$env \
     --output-dir dist/$env --name app.yaml
@@ -82,7 +82,7 @@ app:
 复杂值用单引号包住，避免 shell 展开：
 
 ```bash
-devconfig-gen generate --provider custom --input configs/base.yaml \
+devconfig_gen_singbox generate --provider custom --input configs/base.yaml \
   --set 'list=[1,2,3]' \
   --set 'obj={"x":1}' \
   --set 'url=http://x?a=b' \
@@ -95,7 +95,7 @@ devconfig-gen generate --provider custom --input configs/base.yaml \
 
 ```bash
 for env in dev staging prod; do
-  devconfig-gen generate --provider custom \
+  devconfig_gen_singbox generate --provider custom \
     --input configs/base.yaml \
     --set app.environment=$env \
     --set "build.label=$env-$(date +%Y%m%d)" \
@@ -106,7 +106,7 @@ done
 `--output-dir` 与 `--name` 都支持子目录，因此也可以单条命令写入嵌套路径：
 
 ```bash
-devconfig-gen generate --provider custom \
+devconfig_gen_singbox generate --provider custom \
   --input configs/base.yaml \
   --output-dir dist --name envs/prod/app.yaml
 ```
@@ -116,21 +116,21 @@ devconfig-gen generate --provider custom \
 CLI 没有内置的 `-` 约定，但 Unix 上可以使用 `/dev/stdin`：
 
 ```bash
-printf 'app:\n  name: piped\n' | devconfig-gen validate --provider custom --input /dev/stdin
+printf 'app:\n  name: piped\n' | devconfig_gen_singbox validate --provider custom --input /dev/stdin
 # /dev/stdin: valid
 ```
 
 或用进程替换（bash/zsh）：
 
 ```bash
-devconfig-gen validate --provider custom --input <(printf 'app:\n  name: proc-sub\n')
+devconfig_gen_singbox validate --provider custom --input <(printf 'app:\n  name: proc-sub\n')
 ```
 
 用 `jq` 动态构造输入：
 
 ```bash
 jq -n '{app:{name:"jq-app",port:8080}}' \
-  | devconfig-gen validate --provider custom --input /dev/stdin
+  | devconfig_gen_singbox validate --provider custom --input /dev/stdin
 ```
 
 由于 `/dev/stdin` 与 `/dev/fd/*` 没有可识别的扩展名，格式由内容推断：
@@ -140,11 +140,11 @@ jq -n '{app:{name:"jq-app",port:8080}}' \
 
 ```bash
 # JSON -> YAML
-devconfig-gen generate --provider custom \
+devconfig_gen_singbox generate --provider custom \
   --input configs/base.json --output-dir converted --name config.yaml
 
 # YAML -> JSON
-devconfig-gen generate --provider custom \
+devconfig_gen_singbox generate --provider custom \
   --input configs/base.yaml --output-dir converted --name config.json
 ```
 
@@ -154,7 +154,7 @@ devconfig-gen generate --provider custom \
 ## 生成 .env
 
 ```bash
-devconfig-gen generate --provider env \
+devconfig_gen_singbox generate --provider env \
   --input configs/vars.yaml --output-dir dist --name .env.production
 ```
 
@@ -184,17 +184,17 @@ DEBUG=true
 set -euo pipefail
 
 # 校验失败时退出码为 1，set -e 会中止脚本
-devconfig-gen validate --provider env --input configs/vars.yaml
+devconfig_gen_singbox validate --provider env --input configs/vars.yaml
 
 # 只在通过后生成
-devconfig-gen generate --provider env --input configs/vars.yaml \
+devconfig_gen_singbox generate --provider env --input configs/vars.yaml \
   --output-dir dist --name .env
 ```
 
 需要机器可读结果时：
 
 ```bash
-devconfig-gen validate --provider env --input broken.yaml --json \
+devconfig_gen_singbox validate --provider env --input broken.yaml --json \
   | jq -r '.[] | "\(.field): \(.message)"'
 # variables: variables must not be empty
 ```
@@ -203,14 +203,14 @@ devconfig-gen validate --provider env --input broken.yaml --json \
 要么先捕获退出码，要么用 `|| true` 允许读取输出：
 
 ```bash
-diagnostics=$(devconfig-gen validate --provider env --input broken.yaml --json || true)
+diagnostics=$(devconfig_gen_singbox validate --provider env --input broken.yaml --json || true)
 echo "$diagnostics" | jq -r '.[] | .message'
 ```
 
 ## 用 schema 驱动外部客户端
 
 ```bash
-devconfig-gen schema --provider env \
+devconfig_gen_singbox schema --provider env \
   | jq -r '.[] | .id as $id | .fields[] | "\($id).\(.name): \(.type) required=\(.required)"'
 # variables.variables: mapping required=true
 ```
@@ -222,9 +222,9 @@ devconfig-gen schema --provider env \
 同一输入、同一环境下，重复生成的结果逐字节一致：
 
 ```bash
-devconfig-gen generate --provider custom --input configs/base.yaml \
+devconfig_gen_singbox generate --provider custom --input configs/base.yaml \
   --output-dir det1 --format json
-devconfig-gen generate --provider custom --input configs/base.yaml \
+devconfig_gen_singbox generate --provider custom --input configs/base.yaml \
   --output-dir det2 --format json
 cmp det1/custom.json det2/custom.json && echo "identical"
 ```
@@ -232,7 +232,7 @@ cmp det1/custom.json det2/custom.json && echo "identical"
 因此产物可以直接提交到版本库，或用 `git diff --exit-code` 检查漂移：
 
 ```bash
-devconfig-gen generate --provider custom --input configs/base.yaml \
+devconfig_gen_singbox generate --provider custom --input configs/base.yaml \
   --output-dir generated --format json
 git diff --exit-code -- generated/custom.json
 ```
@@ -244,15 +244,15 @@ git diff --exit-code -- generated/custom.json
 
 ```bash
 # 1) 先看 Provider 需要什么
-devconfig-gen providers
-devconfig-gen schema --provider custom
+devconfig_gen_singbox providers
+devconfig_gen_singbox schema --provider custom
 
 # 2) 校验所有候选输入
-devconfig-gen validate --provider custom \
+devconfig_gen_singbox validate --provider custom \
   --input configs/base.yaml --input configs/prod.yaml
 
 # 3) 覆盖并生成
-devconfig-gen generate --provider custom \
+devconfig_gen_singbox generate --provider custom \
   --input configs/base.yaml --input configs/prod.yaml \
   --set app.port=9090 \
   --output-dir dist --name prod.yaml
