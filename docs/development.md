@@ -75,7 +75,7 @@ python -m build            # 生成 dist/*.whl 与 dist/*.tar.gz
 - 版本同时出现在 `pyproject.toml` 与 `src/devconfig_gen/__init__.py` 的
   `__version__`；CLI `--version` 直接读取 `__version__`，因此发布时两处需
   保持一致（测试 `test_version_matches_package_version` 会校验 CLI 与包
-  版本一致）。当前版本为 `2.1.6`。
+  版本一致）。当前版本为 `2.1.7`。
 
 ## 文档站点（GitHub Pages）
 

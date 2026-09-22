@@ -82,6 +82,12 @@ def add_subparsers(sub) -> None:
                                  help="Skip the interactive confirmation before a real run")
             command.add_argument("--json", action="store_true",
                                  help="Emit the machine-readable report as JSON (implies --yes for real runs)")
+            command.add_argument(
+                "--show",
+                choices=("client", "links", "both", "none"),
+                default="client",
+                help="Which generated content to print after a real run (default: client)",
+            )
         command.set_defaults(handler=_run)
 
 
@@ -161,33 +167,25 @@ def interactive_plan(domain=None, protocols=None, reader=None, writer=None, ui=N
     )
     server_ip = _ask(ui, "服务器公网 IP", "留空=自动探测", reader=reader, writer=writer)
 
-    ui.section("2/4 外部资源")
-    use_dns = _ask_yes_no(
-        ui, "用 Cloudflare 管理 DNS A 记录？",
-        "Y：自动创建/更新 <前缀>.<域名> 的 A 记录（需要 CF 凭据）",
-        default=True, reader=reader, writer=writer,
-    )
+    ui.section("2/4 Cloudflare（DNS 必填）")
+    ui.warn("DNS A 记录由 Cloudflare 管理，因此 CF 凭据必填（仅本次内存使用，不写盘）")
+    env = {
+        "CF_Token": _ask_secret(
+            ui, "Cloudflare API Token", "需要 Zone.DNS 编辑权限",
+            reader=reader, writer=writer,
+        ),
+        "CF_Zone_ID": _ask(
+            ui, "Cloudflare Zone ID", "域名对应的 Zone ID",
+            reader=reader, writer=writer,
+        ),
+    }
     use_acme = _ask_yes_no(
         ui, "用 acme.sh 自动签发 TLS 证书？",
-        "TUIC / Hysteria2 需要证书；Y 会走 Cloudflare DNS-01 签发",
+        "TUIC / Hysteria2 需要证书；Y 会走 Cloudflare DNS-01 签发（复用上面的 CF 凭据）",
         default=True, reader=reader, writer=writer,
     )
 
-    env = {}
-    if use_dns or use_acme:
-        ui.section("3/4 Cloudflare 凭据（仅本次内存使用，不写盘）")
-        env["CF_Token"] = _ask_secret(
-            ui, "Cloudflare API Token", "Zone.DNS 编辑权限",
-            reader=reader, writer=writer,
-        )
-        env["CF_Zone_ID"] = _ask(
-            ui, "Cloudflare Zone ID", "域名的 Zone ID",
-            reader=reader, writer=writer,
-        )
-    else:
-        ui.section("3/4 Cloudflare 凭据")
-        ui.warn("已跳过 DNS 与证书：你需要自己解析域名并准备证书文件")
-
+    ui.section("3/4 运行时")
     use_runtime = _ask_yes_no(
         ui, "启用运行时适配器？",
         "systemd / nftables / watchdog / 每日自动升级（生产建议 Y）",
@@ -206,7 +204,7 @@ def interactive_plan(domain=None, protocols=None, reader=None, writer=None, ui=N
         "server_ip": server_ip or "auto",
         "adapters": {
             "secrets": "singbox-subprocess",
-            "dns": "cloudflare" if use_dns else None,
+            "dns": "cloudflare",
             "acme": "cloudflare-dns01" if use_acme else None,
             "state": "local-json" if use_runtime else None,
             "runtime": {
@@ -314,7 +312,8 @@ def _run(args) -> int:
                 os.environ[key] = value
 
         dry_run = True if args.command == "context" else bool(getattr(args, "dry_run", False))
-        runner = make_runner(dry_run)
+        echo_commands = (not json_mode) and args.command in ("deploy", "redeploy", "destroy")
+        runner = make_runner(dry_run, on_command=(ui.command if echo_commands else None))
         suite = build_suite(plan, runner)
 
         if args.command == "context":
@@ -366,6 +365,23 @@ def _run(args) -> int:
     if report.outputs:
         for key, path in report.outputs.items():
             ui.success(f"{key} -> {path}")
+        if not report.dry_run:
+            show = getattr(args, "show", "client")
+            wanted = []
+            if show in ("client", "both"):
+                wanted.append(("client_config", "客户端配置"))
+            if show in ("links", "both"):
+                wanted.append(("links", "分享链接"))
+            for key, title in wanted:
+                path = report.outputs.get(key)
+                if not path:
+                    continue
+                try:
+                    body = runner.read_text(path)
+                except Exception:
+                    continue
+                ui.section(f"{title}（{path}）")
+                ui.content(body)
     if report.dry_run:
         ui.warn("dry-run 结束，未改动系统")
     else:

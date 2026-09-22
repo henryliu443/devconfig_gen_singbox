@@ -12,36 +12,37 @@ def run_wizard(inputs):
 
 
 class WizardTests(unittest.TestCase):
-    def test_collects_cf_credentials_when_dns_enabled(self):
+    def test_dns_is_always_cloudflare_and_creds_are_collected(self):
         inputs = (
             "example.com\n"   # domain
             "\n"              # protocols (default)
             "none\n"          # tunnel mode
             "\n"              # server ip (auto)
-            "y\n"             # use cloudflare dns
-            "y\n"             # use acme
             "tok123\n"        # CF token
             "zone456\n"       # CF zone
+            "y\n"             # acme
             "y\n"             # runtime adapters
-            "\n\n\n"          # output paths (defaults)
+            "\n\n\n"          # output paths
         )
         plan, env = run_wizard(inputs)
         self.assertEqual(plan["domain_root"], "example.com")
         self.assertEqual(plan["tunnel_mode"], "none")
+        # DNS is mandatory, never optional
         self.assertEqual(plan["adapters"]["dns"], "cloudflare")
         self.assertEqual(env["CF_Token"], "tok123")
         self.assertEqual(env["CF_Zone_ID"], "zone456")
+        self.assertEqual(plan["adapters"]["acme"], "cloudflare-dns01")
 
-    def test_skips_cf_credentials_when_no_dns_and_no_acme(self):
+    def test_acme_can_be_skipped_but_dns_cannot(self):
         inputs = (
             "example.com\n\nnone\n\n"
-            "n\nn\n"
-            "y\n"
+            "tok\nzone\n"
+            "n\n"             # no acme
+            "y\n"             # runtime
             "\n\n\n"
         )
         plan, env = run_wizard(inputs)
-        self.assertEqual(env, {})
-        self.assertIsNone(plan["adapters"]["dns"])
+        self.assertEqual(plan["adapters"]["dns"], "cloudflare")
         self.assertIsNone(plan["adapters"]["acme"])
         self.assertEqual(plan["adapters"]["runtime"]["auto_update"], "auto-update")
 
@@ -52,8 +53,8 @@ class WizardTests(unittest.TestCase):
             "\n"              # protocols
             "\n"              # tunnel (default proxy)
             "\n"              # ip
-            "n\nn\n"          # no dns, no acme
-            "n\n"             # no runtime
+            "tok\nzone\n"
+            "n\nn\n"          # no acme, no runtime
             "\n\n\n"
         )
         plan, env = run_wizard(inputs)

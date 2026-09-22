@@ -111,10 +111,11 @@ devconfig_gen_singbox deploy
 2. **`启用协议 [anytls,tuic,hysteria2]`**：直接回车默认三协议全开，或输入子集（逗号分隔）。
 3. **`出站模式 none/proxy/tun [proxy]`**：如果服务器上有运行正常的 WARP，选 `proxy`；如果无 WARP 或想纯直连，填 `none`。
 4. **`服务器公网 IP (留空=自动探测)`**：回车即可自动从公网探测。
-5. **`用 Cloudflare 管理 DNS A 记录？ [Y/n]`**：如果已配置环境变量 `CF_Token` 和 `CF_Zone_ID`，选 Y 自动解析子域名；如果你想自己手动在域名商后台加解析，选 n。
-6. **`签发 TLS 证书 (acme.sh DNS-01)？ [Y/n]`**：TUIC 和 Hysteria2 需要证书。选 Y 自动调 acme.sh 签发；如果已有证书或打算自己签，选 n。
-7. **`启用运行时适配器？ [Y/n]`**：是否自动安装依赖、配置 systemd、加载 nftables 防火墙、部署守护任务。生产部署选 Y。
-8. **`输出路径`**：服务端/客户端/链接文件的保存路径，一路回车使用标准默认路径。
+5. **`Cloudflare API Token`**（不回显）：DNS A 记录必填，需要 Zone.DNS 编辑权限。
+6. **`Cloudflare Zone ID`**：域名对应的 Zone ID。
+7. **`用 acme.sh 自动签发 TLS 证书？ [Y/n]`**：TUIC 和 Hysteria2 需要证书。选 Y 自动调 acme.sh 签发；如果已有证书或打算自己签，选 n。
+8. **`启用运行时适配器？ [Y/n]`**：是否自动安装依赖、配置 systemd、加载 nftables 防火墙、部署守护任务。生产部署选 Y。
+9. **`输出路径`**：服务端/客户端/链接文件的保存路径，一路回车使用标准默认路径。
 
 > **小技巧**：在执行真实操作前，你可以随时加上 `--dry-run` 查看演练结果而不对服务器产生任何改动：
 > ```bash
@@ -142,7 +143,7 @@ devconfig_gen_singbox deploy
 
    adapters:
      secrets: singbox-subprocess  # 调用 sing-box 二进制生成高强度 UUID 与 Reality 密钥
-     dns: null                    # 设为 null 跳过 Cloudflare 步骤，自己手动解析
+     dns: cloudflare               # DNS 必填：A 记录由 Cloudflare 管理（需 CF_Token / CF_Zone_ID）
      acme: null                   # 设为 null 跳过证书签发，由自己管理
      state: local-json
      runtime:
