@@ -1,4 +1,9 @@
+import importlib.util
 import unittest
+
+# REALITY keypair generation without the sing-box binary needs `cryptography`.
+# CI installs the `[ops]` extra, but tests must stay green in a bare env too.
+HAS_CRYPTO = importlib.util.find_spec("cryptography") is not None
 
 from singbox_ops.adapters.secrets.python_secrets import PythonSecrets
 from singbox_ops.adapters.secrets.singbox_subprocess import SingboxSubprocessSecrets
@@ -14,6 +19,7 @@ def plan_for(protocols=("anytls", "tuic", "hysteria2")):
 
 
 class PythonSecretsTests(unittest.TestCase):
+    @unittest.skipUnless(HAS_CRYPTO, "cryptography not installed")
     def test_generates_all_credentials_and_prefixes(self):
         generated = PythonSecrets().generate(plan_for())
         self.assertEqual(set(generated.credentials), {"anytls", "tuic", "hysteria2"})
@@ -27,6 +33,7 @@ class PythonSecretsTests(unittest.TestCase):
         # prefixes must be unique
         self.assertEqual(len(set(generated.subdomain_prefixes.values())), 3)
 
+    @unittest.skipUnless(HAS_CRYPTO, "cryptography not installed")
     def test_plan_prefixes_win(self):
         plan = plan_for(("anytls",))
         plan = DeployPlan.from_mapping(
