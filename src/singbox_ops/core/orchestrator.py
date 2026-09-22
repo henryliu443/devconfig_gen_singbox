@@ -306,5 +306,7 @@ def _default_generate(plan: DeployPlan, context: Mapping[str, Any]):
     return generate_pipeline("singbox", context=dict(context))
 
 
-def make_runner(dry_run: bool) -> CommandRunner:
-    return RecordingRunner() if dry_run else LocalCommandRunner()
+def make_runner(dry_run: bool, on_command=None) -> CommandRunner:
+    if dry_run:
+        return RecordingRunner(on_command=on_command)
+    return LocalCommandRunner(on_command=on_command)

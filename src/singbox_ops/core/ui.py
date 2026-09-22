@@ -55,6 +55,14 @@ class UI:
     def step(self, text: str) -> None:
         self.stream.write("  " + self.cyan("→ ") + text + "\n")
 
+    def command(self, text: str) -> None:
+        self.stream.write("      " + self.dim("$ " + text) + "\n")
+
+    def content(self, text: str) -> None:
+        if not text.endswith("\n"):
+            text += "\n"
+        self.stream.write(text)
+
     def success(self, text: str) -> None:
         self.stream.write("  " + self.green("✓ ") + text + "\n")
 

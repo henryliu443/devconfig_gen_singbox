@@ -6,6 +6,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.7] - 2026-09-23
+
+### Added
+
+- `deploy` / `redeploy` / `destroy` now **echo every command** right before it
+  runs (e.g. `$ systemctl enable --now sing-box`).
+- After a real run the **client config is printed to the terminal by default**,
+  so it can be copied without a second command. Choose with
+  `--show client|links|both|none` (default `client`).
+
+### Removed
+
+- `adapters.dns: null` — a leftover from earlier testing. DNS is **mandatory**:
+  the interactive wizard always uses Cloudflare and always asks for
+  `CF_Token` / `CF_Zone_ID`.
+
 ## [2.1.6] - 2026-09-23
 
 ### Added
@@ -68,8 +84,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (A-repo style): prompts for domain, protocols, tunnel mode, server IP, and
   the DNS / ACME / runtime switches, then deploys.
 - `init` writes a `plan.yaml` from the same wizard without deploying.
-- `singbox_ops`: `adapters.dns` may be `null` to skip the DNS step (DNS managed
-  elsewhere). `deploy`/`destroy` skip it cleanly.
 
 ## [2.1.1] - 2026-09-22
 

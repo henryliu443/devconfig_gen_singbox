@@ -71,10 +71,25 @@ class CommandRunner:
         raise NotImplementedError
 
 
+def _fmt(args) -> str:
+    if isinstance(args, str):
+        return args
+    return " ".join(str(item) for item in args)
+
+
 class LocalCommandRunner(CommandRunner):
-    """Execute commands and write files on the local machine."""
+    """Execute commands and write files on the local machine.
+
+    ``on_command`` receives every command line right before it is executed, so
+    the CLI can echo what it is doing.
+    """
+
+    def __init__(self, on_command=None):
+        self.on_command = on_command
 
     def run(self, args: Sequence[str], *, check: bool = True, env=None) -> CommandResult:
+        if self.on_command is not None:
+            self.on_command(_fmt(args))
         merged_env = None
         if env is not None:
             merged_env = dict(os.environ)
@@ -89,6 +104,8 @@ class LocalCommandRunner(CommandRunner):
         return result.check_returncode() if check else result
 
     def shell(self, command: str, *, check: bool = True, env=None) -> CommandResult:
+        if self.on_command is not None:
+            self.on_command(command)
         merged_env = None
         if env is not None:
             merged_env = dict(os.environ)
@@ -146,7 +163,8 @@ class LocalCommandRunner(CommandRunner):
 class RecordingRunner(CommandRunner):
     """Record intended actions without performing them (``--dry-run`` / tests)."""
 
-    def __init__(self, existing: Optional[Sequence[str]] = None):
+    def __init__(self, existing: Optional[Sequence[str]] = None, on_command=None):
+        self.on_command = on_command
         self.commands: List[Tuple[Any, ...]] = []
         self.shell_commands: List[str] = []
         self.writes: List[Tuple[str, str, Optional[int]]] = []
@@ -159,11 +177,15 @@ class RecordingRunner(CommandRunner):
 
     def run(self, args: Sequence[str], *, check: bool = True, env=None) -> CommandResult:
         self.commands.append(("run", tuple(str(item) for item in args), dict(env or {})))
+        if self.on_command is not None:
+            self.on_command(_fmt(args))
         return CommandResult(tuple(args), 0, "", "")
 
     def shell(self, command: str, *, check: bool = True, env=None) -> CommandResult:
         self.shell_commands.append(command)
         self.commands.append(("shell", command, dict(env or {})))
+        if self.on_command is not None:
+            self.on_command(command)
         return CommandResult(command, 0, "", "")
 
     def write_text(self, path, text: str, *, mode: Optional[int] = None) -> None:
